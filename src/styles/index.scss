@@ -1,10 +1,12 @@
 @import './variables.scss';
 @import './main.scss';
 @import './stillFresh.scss';
+@import './archive.scss';
 @import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap');
 
 html{
   background: $background-color;
+  /* overflow-y: hidden; */
 }
 
 * {

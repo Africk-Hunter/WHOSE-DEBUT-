@@ -1,0 +1,95 @@
+.archive {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding-bottom: 10vh;
+}
+
+.gridHolder {
+    display: flex;
+    width: 80%;
+    flex-direction: column;
+    justify-content: start;
+    gap: 2rem;
+}
+
+.archiveGrid {
+    display: grid;
+    grid-template-columns: 3;
+    grid-template-columns: 48px 270px 1fr;
+    align-items: center;
+    column-gap: 3rem;
+    width: 80%;
+}
+
+.spine {
+    position: relative;
+    justify-self: center;
+    min-height: calc(100% + 2rem);
+    width: 1.5rem;
+    background: black;
+}
+
+.circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3rem;
+    height: 3rem;
+    background: black;
+    border-radius: 50px;
+}
+
+
+.archiveGrid.year {
+
+    .spine {
+        display: flex;
+        height: 15rem;
+    }
+
+    &.start .spine {
+        transform: translateY(50%);
+    }
+
+    .circle {
+        top: 0;
+        width: 4rem;
+        height: 4rem;
+    }
+
+    .archiveMonth {
+        font-size: 5rem;
+    }
+}
+
+.archiveGrid.end {
+
+    .circle {
+        top: auto;
+        bottom: calc(0px - 3rem);
+    }
+
+    .spine {
+        transform: translateY(-50%);
+    }
+}
+
+
+.archiveMonth {
+    font-size: 3rem;
+}
+
+.archiveAlbums {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.albumBox {
+    width: 10rem;
+    height: 10rem;
+    background: black;
+}
