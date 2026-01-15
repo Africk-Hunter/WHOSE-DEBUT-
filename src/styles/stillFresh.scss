@@ -1,0 +1,15 @@
+.stillFresh {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 102vh;
+}
+
+.stillFreshAlbums {
+    display: grid;
+    width: 80%;
+    grid-template-columns: repeat(5, 20%);
+    grid-template-rows: 2;
+    margin: auto 0 auto 0;
+    row-gap: 2rem;
+}

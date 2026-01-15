@@ -1,9 +1,17 @@
 @import './variables.scss';
+@import './main.scss';
+@import './stillFresh.scss';
+@import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap');
+
+html{
+  background: $background-color;
+}
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Do Hyeon", sans-serif;
 }
 
 body {
@@ -15,4 +23,5 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+
 }
