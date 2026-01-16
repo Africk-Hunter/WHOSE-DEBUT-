@@ -2,11 +2,14 @@
 @import './main.scss';
 @import './stillFresh.scss';
 @import './archive.scss';
+@import './footer.scss';
 @import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap');
 
-html{
+html {
   background: $background-color;
-  /* overflow-y: hidden; */
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100vh;
 }
 
 * {
@@ -26,4 +29,10 @@ body {
   width: 100%;
   min-height: 100vh;
 
+}
+
+.all {
+  scroll-snap-type: mandatory;
+  scroll-snap-points-y: repeat(300px);
+  scroll-snap-type: y mandatory;
 }

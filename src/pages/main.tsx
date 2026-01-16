@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import Album from '../components/Album'
+import Footer from '../components/Footer'
 
 function Main() {
     const whoseDebutRef = useRef<HTMLElement>(null);
@@ -10,8 +11,30 @@ function Main() {
         ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
+    useEffect(() => {
+        const handleScroll = () => {
+            const archive = archiveRef.current;
+            if (!archive) return;
+
+            const archiveRect = archive.getBoundingClientRect();
+            const isArchiveVisible = archiveRect.top <= 0;
+
+            if (isArchiveVisible && archiveRect.top >= -10 && window.scrollY > 0) {
+                const scrollingUp = archiveRect.top > -5;
+                if (scrollingUp) {
+                    document.documentElement.style.scrollSnapType = 'y mandatory';
+                } else {
+                    document.documentElement.style.scrollSnapType = 'y proximity';
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     return (
-        <>
+        <section className='all'>
             <main className="main" ref={whoseDebutRef}>
                 <section className="topBar">
                     <button className="backArrow"><img src="../../public/images/Arrow.svg" alt="" className="arrowImage" /></button>
@@ -37,7 +60,6 @@ function Main() {
                     </button>
                     <h1 className="pageHeader">STILL FRESH</h1>
                 </section>
-                {/* <div className="divider"></div> */}
                 <section className="stillFreshAlbums">
                     <Album type='stillFresh' />
                     <Album type='stillFresh' />
@@ -57,7 +79,7 @@ function Main() {
                     </button>
                 </section>
             </section>
-            <section className="archive"  ref={archiveRef}>
+            <section className="archive" ref={archiveRef}>
                 <section className="topBar">
                     <button className="backArrow"><img src="../../public/images/Arrow.svg" alt="" className="arrowImage" /></button>
                     <h1 className="pageHeader">THE ARCHIVE</h1>
@@ -140,7 +162,8 @@ function Main() {
 
 
             </section>
-        </>
+            <Footer />
+        </section>
 
     );
 }

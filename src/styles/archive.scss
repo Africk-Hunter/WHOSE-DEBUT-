@@ -4,6 +4,8 @@
     align-items: center;
     min-height: 100vh;
     padding-bottom: 10vh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
 }
 
 .gridHolder {
@@ -17,7 +19,7 @@
 .archiveGrid {
     display: grid;
     grid-template-columns: 3;
-    grid-template-columns: 48px 270px 1fr;
+    grid-template-columns: 48px 270px 100%;
     align-items: center;
     column-gap: 3rem;
     width: 80%;
