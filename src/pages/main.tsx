@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import Album from '../components/Album'
 import Footer from '../components/Footer'
 
@@ -6,32 +6,57 @@ function Main() {
     const whoseDebutRef = useRef<HTMLElement>(null);
     const stillFreshRef = useRef<HTMLElement>(null);
     const archiveRef = useRef<HTMLElement>(null);
+    const [inArchive, setInArchive] = useState(false);
 
     const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
         ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     useEffect(() => {
+        let ticking = false;
+
         const handleScroll = () => {
-            const archive = archiveRef.current;
-            if (!archive) return;
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const archive = archiveRef.current;
+                    if (!archive) {
+                        ticking = false;
+                        return;
+                    }
 
-            const archiveRect = archive.getBoundingClientRect();
-            const isArchiveVisible = archiveRect.top <= 0;
+                    const archiveRect = archive.getBoundingClientRect();
+                    
+                    // Disable snap when archive top passes viewport top
+                    const archiveScrolledInto = archiveRect.top < -50;
+                    
+                    // Only re-enable snap when scrolling back up near the very top of archive
+                    const backNearTop = archiveRect.top > -10 && archiveRect.top < 100;
 
-            if (isArchiveVisible && archiveRect.top >= -10 && window.scrollY > 0) {
-                const scrollingUp = archiveRect.top > -5;
-                if (scrollingUp) {
-                    document.documentElement.style.scrollSnapType = 'y mandatory';
-                } else {
-                    document.documentElement.style.scrollSnapType = 'y proximity';
-                }
+                    if (archiveScrolledInto) {
+                        if (!inArchive) {
+                            setInArchive(true);
+                            document.documentElement.style.scrollSnapType = 'none';
+                        }
+                    } else if (backNearTop) {
+                        // Only re-enable when we're scrolling back up to the top
+                        if (inArchive) {
+                            setInArchive(false);
+                            document.documentElement.style.scrollSnapType = 'y mandatory';
+                        }
+                    }
+
+                    ticking = false;
+                });
+                ticking = true;
             }
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            document.documentElement.style.scrollSnapType = 'y mandatory';
+        };
+    }, [inArchive]);
 
     return (
         <section className='all'>
