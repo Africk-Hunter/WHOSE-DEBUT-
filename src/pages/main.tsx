@@ -1,12 +1,16 @@
 import { useRef, useEffect, useState } from 'react';
 import Album from '../components/Album'
 import Footer from '../components/Footer'
+import ArchiveEntry from '../components/ArchiveEntry';
+import { loadAlbumsFromDatabase } from '../components/AlbumHandler';
 
 function Main() {
     const whoseDebutRef = useRef<HTMLElement>(null);
     const stillFreshRef = useRef<HTMLElement>(null);
     const archiveRef = useRef<HTMLElement>(null);
     const [inArchive, setInArchive] = useState(false);
+
+
 
     const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
         ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -25,11 +29,8 @@ function Main() {
                     }
 
                     const archiveRect = archive.getBoundingClientRect();
-                    
-                    // Disable snap when archive top passes viewport top
+
                     const archiveScrolledInto = archiveRect.top < -50;
-                    
-                    // Only re-enable snap when scrolling back up near the very top of archive
                     const backNearTop = archiveRect.top > -10 && archiveRect.top < 100;
 
                     if (archiveScrolledInto) {
@@ -38,7 +39,6 @@ function Main() {
                             document.documentElement.style.scrollSnapType = 'none';
                         }
                     } else if (backNearTop) {
-                        // Only re-enable when we're scrolling back up to the top
                         if (inArchive) {
                             setInArchive(false);
                             document.documentElement.style.scrollSnapType = 'y mandatory';
@@ -57,6 +57,10 @@ function Main() {
             document.documentElement.style.scrollSnapType = 'y mandatory';
         };
     }, [inArchive]);
+
+    useEffect( ()=> {
+        loadAlbumsFromDatabase();
+    }, [])
 
     return (
         <section className='all'>
@@ -111,14 +115,8 @@ function Main() {
                 </section>
 
                 <section className="gridHolder">
-                    <section className="archiveGrid year start">
-                        <div className="spine">
-                            <div className="circle"></div>
-                        </div>
-
-                        <div className="archiveMonth">2026</div>
-
-                    </section>
+                    <ArchiveEntry type='year' month='2026' position='start' />
+                    <ArchiveEntry type='month' month='March' position='' />
                     <section className="archiveGrid">
                         <div className="spine">
                             <div className="circle"></div>
@@ -176,14 +174,7 @@ function Main() {
                         </section>
                     </section>
                 </section>
-                <section className="archiveGrid year end">
-                    <div className="spine">
-                        <div className="circle"></div>
-                    </div>
-
-                    <div className="archiveMonth">2025</div>
-
-                </section>
+                <ArchiveEntry type='year' month='2025' position='end' />
 
 
             </section>
