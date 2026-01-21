@@ -2,14 +2,14 @@ import { useRef, useEffect, useState } from 'react';
 import Album from '../components/Album'
 import Footer from '../components/Footer'
 import ArchiveEntry from '../components/ArchiveEntry';
-import { loadAlbumsFromDatabase } from '../components/AlbumHandler';
+import { loadAlbumsFromDatabase, sortAlbumsByReleaseDate } from '../components/AlbumHandler';
 
 function Main() {
     const whoseDebutRef = useRef<HTMLElement>(null);
     const stillFreshRef = useRef<HTMLElement>(null);
     const archiveRef = useRef<HTMLElement>(null);
     const [inArchive, setInArchive] = useState(false);
-
+    const [albums, setAlbums] = useState<any[]>([]);
 
 
     const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
@@ -58,8 +58,19 @@ function Main() {
         };
     }, [inArchive]);
 
-    useEffect( ()=> {
-        loadAlbumsFromDatabase();
+    useEffect(() => {
+        const init = async () => {
+            localStorage.clear();
+            await loadAlbumsFromDatabase();
+            sortAlbumsByReleaseDate();
+            
+            const storedAlbums = localStorage.getItem('albums');
+            if (storedAlbums) {
+                const parsed = JSON.parse(storedAlbums);
+                setAlbums(parsed);
+            }
+        };
+        init();
     }, [])
 
     return (
@@ -71,9 +82,16 @@ function Main() {
                 </section>
                 <div className="divider"></div>
                 <section className="topThree">
-                    <Album type={null} />
-                    <Album type={null} />
-                    <Album type={null} />
+                    {albums.slice(0, 3).map((album, index) => (
+                        <Album 
+                            key={index}
+                            type={null}
+                            title={album.name}
+                            artist={album.artist}
+                            release_date={album.dateReleased}
+                            image={album.image_url}
+                        />
+                    ))}
                 </section>
                 <section className="bottomBar">
                     <a href="" className="contactLink">Are you releasing an album? Click here!</a>
@@ -90,16 +108,16 @@ function Main() {
                     <h1 className="pageHeader">STILL FRESH</h1>
                 </section>
                 <section className="stillFreshAlbums">
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
-                    <Album type='stillFresh' />
+                    {albums.slice(3, 13).map((album, index) => (
+                        <Album 
+                            key={index}
+                            type='stillFresh'
+                            title={album.name}
+                            artist={album.artist}
+                            release_date={album.dateReleased}
+                            image={album.image_url}
+                        />
+                    ))}
                 </section>
                 <section className="bottomBar">
                     <a href="" className="contactLink">Are you releasing an album? Click here!</a>
