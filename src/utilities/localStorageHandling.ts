@@ -1,12 +1,3 @@
-import { supabase } from '../utilities/database/supabaseClient';
-
-async function loadAlbumsFromDatabase() {
-    const { data: fetchedAlbums, error } = await supabase.from('Albums').select()
-    fetchedAlbums?.forEach(album => {
-        addAlbumToLocalStorage(album);
-    })
-}
-
 function addAlbumToLocalStorage(album: object) {
     let currentAlbums = localStorage.getItem('albums');
     if (currentAlbums === null) {
@@ -36,4 +27,19 @@ function sortAlbumsByReleaseDate() {
     }
 }
 
-export { loadAlbumsFromDatabase, sortAlbumsByReleaseDate };
+function pullAlbumInfoByID(ID: string) {
+    let storedAlbums = localStorage.getItem('albums');
+    if (storedAlbums) {
+        const parsed = JSON.parse(storedAlbums);
+        if (Array.isArray(parsed)) {
+           for (var i = 0; i < parsed.length; i++){
+            if(parsed[i].id == ID){
+                return parsed[i]
+            }
+           }
+        }
+    }
+    return null;
+}
+
+export { addAlbumToLocalStorage, sortAlbumsByReleaseDate, pullAlbumInfoByID };

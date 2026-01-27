@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utilities/database/supabaseClient';
+import { uploadCoverToSupabase, submitAlbumToSupabase } from '../utilities/database/supabaseInteractions';
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -60,45 +61,10 @@ const AdminDashboard: React.FC = () => {
             const fileName = `${albumData.artist.replace(/\s+/g, '_')}-${albumData.title.replace(/\s+/g, '_')}-${Date.now()}.${fileExt}`;
             console.log('Uploading file:', fileName);
 
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('Album_Covers')
-                .upload(fileName, imageFile);
-
-            if (uploadError) {
-                console.error('Error uploading image:', uploadError);
-                alert('Failed to upload image: ' + uploadError.message);
-                return;
-            } else {
-                console.log('Upload successful:', uploadData);
-                const { data: { publicUrl } } = supabase.storage
-                    .from('Album_Covers')
-                    .getPublicUrl(fileName);
-                imageUrl = publicUrl;
-                console.log('Public URL:', publicUrl);
-            }
+            imageUrl = await uploadCoverToSupabase(fileName, imageFile);
         }
 
-        const { error } = await supabase.from('Albums').insert([
-            {
-                name: albumData.title,
-                artist: albumData.artist,
-                year_released: albumData.releaseDate,
-                artist_review: albumData.description,
-                from_a_peer: albumData.fromapeer,
-                genres: albumData.genre,
-                written_by: albumData.written_by,
-                produced_by: albumData.produced_by,
-                engineered_by: albumData.engineered_by,
-                image_url: imageUrl
-            },
-        ]);
-
-        if (error) {
-            console.error('Error adding album:', error);
-            alert('Failed to add album: ' + error.message);
-        } else {
-            console.log('Album added successfully');
-            alert('Album added successfully');
+        if (await submitAlbumToSupabase(albumData, imageUrl)) {
             setAlbumData({
                 title: '',
                 artist: '',

@@ -1,9 +1,10 @@
-@import './variables.scss';
-@import './main.scss';
-@import './stillFresh.scss';
-@import './archive.scss';
-@import './footer.scss';
-@import './admin.scss';
+@import './variables';
+@import './admin';
+@import './albumView';
+@import './archive';
+@import './footer';
+@import './main';
+@import './stillFresh';
 @import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap');
 
 html {

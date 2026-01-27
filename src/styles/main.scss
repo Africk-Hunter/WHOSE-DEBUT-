@@ -84,6 +84,13 @@
     height: 100%;
     width: 100%;
 }
+.album{
+    transition: .2s all ease-in;
+}
+.album:hover{
+    transform: scale(1.1);
+    cursor: pointer;
+}
 
 // Smaller album variant for type2
 .album--small {

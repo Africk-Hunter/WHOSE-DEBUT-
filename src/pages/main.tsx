@@ -2,7 +2,9 @@ import { useRef, useEffect, useState } from 'react';
 import Album from '../components/Album'
 import Footer from '../components/Footer'
 import ArchiveEntry from '../components/ArchiveEntry';
-import { loadAlbumsFromDatabase, sortAlbumsByReleaseDate } from '../components/AlbumHandler';
+
+import { sortAlbumsByReleaseDate } from '../utilities/localStorageHandling';
+import { loadAlbumsFromDatabase } from '../utilities/database/supabaseInteractions';
 
 function Main() {
     const whoseDebutRef = useRef<HTMLElement>(null);
@@ -63,7 +65,7 @@ function Main() {
             localStorage.clear();
             await loadAlbumsFromDatabase();
             sortAlbumsByReleaseDate();
-            
+
             const storedAlbums = localStorage.getItem('albums');
             if (storedAlbums) {
                 const parsed = JSON.parse(storedAlbums);
@@ -71,7 +73,10 @@ function Main() {
             }
         };
         init();
+        
     }, [])
+
+
 
     return (
         <section className='all'>
@@ -83,13 +88,20 @@ function Main() {
                 <div className="divider"></div>
                 <section className="topThree">
                     {albums.slice(0, 3).map((album, index) => (
-                        <Album 
+                        <Album
                             key={index}
                             type={null}
                             title={album.name}
                             artist={album.artist}
                             release_date={album.dateReleased}
+                            review={album.artist_review}
+                            fromAPeer={album.from_a_peer}
                             image={album.image_url}
+                            genres={album.genres}
+                            producers={album.produced_by}
+                            writers={album.written_by}
+                            engineers={album.engineered_by}
+                            id={album.id}
                         />
                     ))}
                 </section>
@@ -109,13 +121,20 @@ function Main() {
                 </section>
                 <section className="stillFreshAlbums">
                     {albums.slice(3, 13).map((album, index) => (
-                        <Album 
+                        <Album
                             key={index}
                             type='stillFresh'
                             title={album.name}
                             artist={album.artist}
                             release_date={album.dateReleased}
+                            review={album.artist_review}
+                            fromAPeer={album.from_a_peer}
                             image={album.image_url}
+                            genres={album.genres}
+                            producers={album.produced_by}
+                            writers={album.written_by}
+                            engineers={album.engineered_by}
+                            id={album.id}
                         />
                     ))}
                 </section>
