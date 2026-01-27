@@ -5,22 +5,16 @@ interface AlbumProps {
     type: string | null;
     title: string;
     artist: string;
-    release_date: string;
-    genres: string[];
-    review: string;
-    fromAPeer: string;
-    engineers: string[];
-    producers: string[];
-    writers: string[];
     image: string;
     id: string;
 }
 
 
-const Album: React.FC<AlbumProps> = ({ type, title, artist, release_date, genres, review, fromAPeer, engineers, producers, writers, image, id }) => {
+const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id }) => {
     const navigate = useNavigate();
 
     function viewAlbum() {
+        localStorage.setItem('selectedID', id)
         navigate(`/album/${id}`);
     }
 

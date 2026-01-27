@@ -23,9 +23,10 @@ const AdminDashboard: React.FC = () => {
         genre: '',
         description: '',
         fromapeer: '',
-        written_by: '',
-        produced_by: '',
-        engineered_by: ''
+        spotify: '',
+        apple: '',
+        bandcamp: '',
+        amazon: ''
     });
 
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -72,9 +73,10 @@ const AdminDashboard: React.FC = () => {
                 genre: '',
                 description: '',
                 fromapeer: '',
-                written_by: '',
-                produced_by: '',
-                engineered_by: ''
+                spotify: '',
+                apple: '',
+                bandcamp: '',
+                amazon: ''
             });
             setImageFile(null);
         }
@@ -125,16 +127,22 @@ const AdminDashboard: React.FC = () => {
                             <label htmlFor="fromapeer">From a Peer</label>
                             <textarea id="fromapeer" name="fromapeer" value={albumData.fromapeer} onChange={handleInputChange} rows={4} />
                         </div>
-                        <label htmlFor="written_by">Written By</label>
-                        <textarea id="written_by" name="written_by" value={albumData.written_by} onChange={handleInputChange} rows={1} />
                     </div>
                     <div className="formGroup">
-                        <label htmlFor="produced_by">Produced By</label>
-                        <textarea id="produced_by" name="produced_by" value={albumData.produced_by} onChange={handleInputChange} rows={1} />
+                        <label htmlFor="spotify">Spotify Link</label>
+                        <textarea id="spotify" name="spotify" value={albumData.spotify} onChange={handleInputChange} rows={1} />
                     </div>
                     <div className="formGroup">
-                        <label htmlFor="engineered_by">Engineered By</label>
-                        <textarea id="engineered_by" name="engineered_by" value={albumData.engineered_by} onChange={handleInputChange} rows={1} />
+                        <label htmlFor="apple">Apple Music Link</label>
+                        <textarea id="apple" name="apple" value={albumData.apple} onChange={handleInputChange} rows={1} />
+                    </div>
+                    <div className="formGroup">
+                        <label htmlFor="bandcamp">BandCamp Link</label>
+                        <textarea id="bandcamp" name="bandcamp" value={albumData.bandcamp} onChange={handleInputChange} rows={1} />
+                    </div>
+                    <div className="formGroup">
+                        <label htmlFor="amazon">Amazon Music Link</label>
+                        <textarea id="amazon" name="amazon" value={albumData.amazon} onChange={handleInputChange} rows={1} />
                     </div>
 
 

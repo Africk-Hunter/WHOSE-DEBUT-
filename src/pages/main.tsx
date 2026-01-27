@@ -73,10 +73,8 @@ function Main() {
             }
         };
         init();
-        
+
     }, [])
-
-
 
     return (
         <section className='all'>
@@ -93,14 +91,7 @@ function Main() {
                             type={null}
                             title={album.name}
                             artist={album.artist}
-                            release_date={album.dateReleased}
-                            review={album.artist_review}
-                            fromAPeer={album.from_a_peer}
                             image={album.image_url}
-                            genres={album.genres}
-                            producers={album.produced_by}
-                            writers={album.written_by}
-                            engineers={album.engineered_by}
                             id={album.id}
                         />
                     ))}
@@ -126,14 +117,7 @@ function Main() {
                             type='stillFresh'
                             title={album.name}
                             artist={album.artist}
-                            release_date={album.dateReleased}
-                            review={album.artist_review}
-                            fromAPeer={album.from_a_peer}
                             image={album.image_url}
-                            genres={album.genres}
-                            producers={album.produced_by}
-                            writers={album.written_by}
-                            engineers={album.engineered_by}
                             id={album.id}
                         />
                     ))}

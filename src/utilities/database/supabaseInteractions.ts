@@ -8,9 +8,10 @@ interface AlbumData {
     genre: string;
     description: string;
     fromapeer: string;
-    written_by: string;
-    produced_by: string;
-    engineered_by: string;
+    spotify: string;
+    apple: string;
+    amazon: string;
+    bandcamp: string;
 }
 
 async function loadAlbumsFromDatabase() {
@@ -52,9 +53,10 @@ async function submitAlbumToSupabase(albumData: AlbumData, imageUrl: string) {
             artist_review: albumData.description,
             from_a_peer: albumData.fromapeer,
             genres: albumData.genre,
-            written_by: albumData.written_by,
-            produced_by: albumData.produced_by,
-            engineered_by: albumData.engineered_by,
+            spotify: albumData.spotify,
+            apple: albumData.apple,
+            bandcamp: albumData.bandcamp,
+            amazon: albumData.amazon,
             image_url: imageUrl
         },
     ]);
