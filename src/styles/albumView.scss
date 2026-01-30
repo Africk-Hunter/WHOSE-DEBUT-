@@ -1,0 +1,109 @@
+.albumView {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    padding: 4rem 5rem;
+
+    align-items: start;
+    gap: 6rem;
+}
+
+.back {
+    all: unset;
+    cursor: pointer;
+    transition: .2s all;
+    width: 5rem;
+
+    &:hover {
+        transform: scale(1.2);
+    }
+
+    img {
+        width: 100%;
+    }
+}
+
+.albumInfo {
+    display: flex;
+    flex-direction: column;
+    height: 95%;
+    width: 30%;
+    justify-content: space-between;
+}
+
+.cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 3px black solid;
+}
+
+.middleInfo {
+    display: flex;
+    width: 100%;
+}
+
+.nameAndArtist {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 70%;
+}
+
+.albumTitleView {
+    font-size: 6rem;
+    line-height: 5rem;
+}
+
+.albumArtistView {
+    font-size: 3.125rem;
+    opacity: 50%;
+    align-items: end;
+}
+
+.links {
+    display: grid;
+    grid-template-columns: repeat(2, 50%);
+    align-content: space-between;
+    justify-items: end;
+    width: 30%;
+    height: 100%;
+
+    img {
+        width: 5rem;
+        transition: .2s all ease;
+
+        &:hover {
+            transform: scale(1.2);
+        }
+    }
+}
+
+.genres{
+    font-size: clamp(2rem, 2.5vw, 3rem);
+    opacity: .4;
+}
+
+.albumReviews{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 60%;
+    height: 95%;
+}
+
+.artistPitch{
+    display: flex;
+    flex-direction: column;
+    height: 50%;
+}
+
+.label{
+    font-size: 5rem;
+    
+}
+
+.review{
+    text-align: justify;
+    font-size: 3rem;
+    opacity: .8;
+}
