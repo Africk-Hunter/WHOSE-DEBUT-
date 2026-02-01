@@ -27,10 +27,15 @@ const AlbumView: React.FC = () => {
             <button className="back" onClick={() => navigate('/')}><img src="../../public/images/Arrow.svg" alt="Return" /></button>
             <section className="albumInfo">
                 <img src={album.image_url} alt="" className="cover" />
-                <section className="middleInfo">
-                    <div className="nameAndArtist">
-                        <h1 className="albumTitleView">{album.name}</h1>
-                        <h2 className="albumArtistView">{album.artist}</h2>
+                <div className="infoSection">
+                    <div className="leftInfo">
+                        <div className="nameAndArtist">
+                            <h1 className="albumTitleView">{album.name}</h1>
+                            <h2 className="albumArtistView">{album.artist}</h2>
+                        </div>
+
+
+                        <p className="genres">Genres: {album.genres}</p>
                     </div>
                     <section className="links">
                         <a href={album.spotify} target='_blank' className="link"><img src="../../public/images/spotify.png" alt="Listen on Spotify" className="linkImg" /></a>
@@ -38,9 +43,9 @@ const AlbumView: React.FC = () => {
                         <a href={album.bandcamp} target='_blank' className="link"><img src="../../public/images/bandcamp.png" alt="Listen on Bandcamp" className="linkImg" /></a>
                         <a href={album.amazon} target='_blank' className="link"><img src="../../public/images/amazon.svg" alt="Listen on Amazon Music" className="linkImg" /></a>
                     </section>
-                    
-                </section>
-                <p className="genres">Genres: {album.genres}</p>
+
+                </div>
+
             </section>
             <section className="albumReviews">
                 <div className="artistPitch">

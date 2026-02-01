@@ -37,6 +37,18 @@
     border: 3px black solid;
 }
 
+.infoSection{
+    display: flex;
+    width: 100%;
+}
+
+.leftInfo{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    gap: 1.5rem;
+}
 .middleInfo {
     display: flex;
     width: 100%;
@@ -46,7 +58,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    width: 70%;
+    width: 100%;
+    gap: 1.25rem;
 }
 
 .albumTitleView {
@@ -62,14 +75,14 @@
 
 .links {
     display: grid;
-    grid-template-columns: repeat(2, 50%);
+    grid-template-columns: 1;
     align-content: space-between;
     justify-items: end;
     width: 30%;
     height: 100%;
 
     img {
-        width: 5rem;
+        width: 4.25rem;
         transition: .2s all ease;
 
         &:hover {
@@ -86,7 +99,6 @@
 .albumReviews{
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     width: 60%;
     height: 95%;
 }

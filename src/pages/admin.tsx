@@ -7,7 +7,7 @@ const AdminPanel: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [session, setSession] = useState<Session | null>(null);
+    const [_session, setSession] = useState<Session | null>(null);
     const [authError, setAuthError] = useState<string | null>(null);
     const [authSuccess, setAuthSuccess] = useState(false);
     const navigate = useNavigate();
