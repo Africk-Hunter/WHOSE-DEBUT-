@@ -97,7 +97,7 @@ function Main() {
                     ))}
                 </section>
                 <section className="bottomBar">
-                    <a href="" className="contactLink">Are you releasing an album? Click here!</a>
+                    <a href="/about" className="contactLink">Are you releasing an album? Click here!</a>
                     <button className="scrollArrow" onClick={() => scrollToSection(stillFreshRef)}>
                         <img src="../../public/images/Arrow.svg" alt="" className="arrowImage" />
                     </button>

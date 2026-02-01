@@ -29,6 +29,11 @@
         height: 4rem;
         cursor: pointer;
     }
+
+    &.about{
+        opacity: 1;
+        pointer-events: all;
+    }
 }
 
 .pageHeader {

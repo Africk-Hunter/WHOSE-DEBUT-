@@ -3,6 +3,7 @@ import Main from './pages/main';
 import AdminPanel from './pages/admin';
 import AdminDashboard from './pages/adminDashboard';
 import AlbumView from './pages/albumView';
+import About from './pages/about';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
       <Route path="/admin" element={<AdminPanel />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/album/:albumId" element={<AlbumView />} />
+      <Route path="/about" element={<About />} />
     </Routes>
   );
 }

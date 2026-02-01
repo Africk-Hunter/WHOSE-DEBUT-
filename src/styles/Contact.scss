@@ -1,0 +1,110 @@
+@import './variables';
+
+.contact {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    
+    @media (min-width: 769px) {
+/*         margin: 3rem 0 3rem 0;
+        width: 60%; */
+    }
+}
+
+.emailOptionsWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    text-align: start;
+    width: 100%;
+    gap: 1rem;
+    font-size: clamp(1rem, 1rem, 3em);
+    font-display: swap;
+
+    @media (min-width: 1921px) {
+        font-size: clamp(1rem, 1.3rem, 3em);
+    }
+}
+
+.thankYouText {
+    display: flex;
+    justify-content: center;
+}
+
+.userEmailContainer {
+    display: flex;
+    width: 100%;
+    height: 5rem;
+    border: 3px solid black;
+    border-radius: 10px;
+    font-size: 2rem;
+}
+
+.userMessageContainer {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    border: 3px solid black;
+    border-radius: 10px;
+    height: 10rem;
+    font-size: 2rem;
+
+    @media (min-width: 768px) {
+        height: 13rem;
+    }
+
+    @media (min-width: 1921px) {
+        height: 25rem;
+    }
+}
+
+.formInput {
+    all: unset;
+    width: 100%;
+    padding: .75rem
+}
+
+.messageSubmitButton {
+    all: unset;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: .25rem;
+    width: 25%;
+    background: black;
+    color: white;
+    border-radius: 10px;
+    padding: .5rem .75rem;
+    cursor: pointer;
+
+    @media (min-width: 768px) {
+        justify-content: center;
+        gap: .75rem;
+        width: 15%;
+    }
+
+    @media (min-width: 1921px) {
+        justify-content: center;
+        gap: .75rem;
+        width: 30%;
+        height: 3rem;
+        font-size: 2rem;
+    }
+
+    &:hover {
+        transform: scale(1.05);
+        transition: all .1s ease-in-out;
+    }
+}
+
+.buttonWrapper {
+    display: flex;
+    width: 100%;
+}
+
+.submitImg {
+    width: 20%;
+}
