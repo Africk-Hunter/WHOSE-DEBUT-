@@ -1,9 +1,9 @@
 import { useRef, useEffect, useState } from 'react';
 import Album from '../components/Album'
 import Footer from '../components/Footer'
-import ArchiveEntry from '../components/ArchiveEntry';
+import Archive from '../components/Archive';
 
-import { sortAlbumsByReleaseDate } from '../utilities/localStorageHandling';
+import { sortAlbumsByReleaseDate, getParsedLocalStorage } from '../utilities/localStorageHandling';
 import { loadAlbumsFromDatabase } from '../utilities/database/supabaseInteractions';
 
 function Main() {
@@ -66,11 +66,8 @@ function Main() {
             await loadAlbumsFromDatabase();
             sortAlbumsByReleaseDate();
 
-            const storedAlbums = localStorage.getItem('albums');
-            if (storedAlbums) {
-                const parsed = JSON.parse(storedAlbums);
-                setAlbums(parsed);
-            }
+            const parsed = getParsedLocalStorage()
+            setAlbums(parsed);
         };
         init();
 
@@ -129,75 +126,8 @@ function Main() {
                     </button>
                 </section>
             </section>
-            <section className="archive" ref={archiveRef}>
-                <section className="topBar">
-                    <button className="backArrow"><img src="../../public/images/Arrow.svg" alt="" className="arrowImage" /></button>
-                    <h1 className="pageHeader">THE ARCHIVE</h1>
-                </section>
-
-                <section className="gridHolder">
-                    <ArchiveEntry type='year' month='2026' position='start' />
-                    <ArchiveEntry type='month' month='March' position='' />
-                    <section className="archiveGrid">
-                        <div className="spine">
-                            <div className="circle"></div>
-                        </div>
-
-                        <div className="archiveMonth">October - </div>
-                        <section className="archiveAlbums">
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                        </section>
-                    </section>
-                    <section className="archiveGrid">
-                        <div className="spine">
-                            <div className="circle"></div>
-                        </div>
-
-                        <div className="archiveMonth">October - </div>
-                        <section className="archiveAlbums">
-                            <div className="albumBox"></div>
-                        </section>
-                    </section>
-                    <section className="archiveGrid">
-                        <div className="spine">
-                            <div className="circle"></div>
-                        </div>
-
-                        <div className="archiveMonth">February - </div>
-                        <section className="archiveAlbums">
-                            <div className="albumBox"></div>
-                        </section>
-                    </section>
-                    <section className="archiveGrid">
-                        <div className="spine">
-                            <div className="circle"></div>
-                        </div>
-
-                        <div className="archiveMonth">September - </div>
-                        <section className="archiveAlbums">
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                            <div className="albumBox"></div>
-                        </section>
-                    </section>
-                </section>
-                <ArchiveEntry type='year' month='2025' position='end' />
-
-
+            <section className="archRef" ref={archiveRef}>
+                <Archive />
             </section>
             <Footer />
         </section>

@@ -56,8 +56,12 @@
         transform: translateY(50%);
     }
 
-    .circle {
+    &.start .circle {
         top: 0;
+    }
+
+    .circle {
+        top: 50%;
         width: 4rem;
         height: 4rem;
     }
@@ -87,11 +91,17 @@
 .archiveAlbums {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 2rem;
 }
 
 .albumBox {
-    width: 10rem;
-    height: 10rem;
+    width: 13rem;
+    height: 13rem;
+    margin: 1rem 0;
     background: black;
+    cursor: pointer;
+    transition: all .15s ease;
+    &:hover{
+        transform: scale(1.1);
+    }
 }
