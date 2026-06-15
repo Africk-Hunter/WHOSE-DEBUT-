@@ -4,7 +4,7 @@ import Footer from '../components/Footer'
 import Archive from '../components/Archive';
 
 import { sortAlbumsByReleaseDate, getParsedLocalStorage } from '../utilities/localStorageHandling';
-import { loadAlbumsFromDatabase } from '../utilities/database/supabaseInteractions';
+import { loadAlbumsFromDatabase } from '../utilities/database/firebaseInteractions';
 
 function Main() {
     const whoseDebutRef = useRef<HTMLElement>(null);
@@ -12,6 +12,7 @@ function Main() {
     const archiveRef = useRef<HTMLElement>(null);
     const [inArchive, setInArchive] = useState(false);
     const [albums, setAlbums] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
 
     const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
@@ -65,13 +66,15 @@ function Main() {
             localStorage.clear();
             await loadAlbumsFromDatabase();
             sortAlbumsByReleaseDate();
-
-            const parsed = getParsedLocalStorage()
+            const parsed = getParsedLocalStorage();
             setAlbums(parsed);
+            setLoading(false);
         };
         init();
 
     }, [])
+
+    if (loading) return <div className="loading">Loading...</div>;
 
     return (
         <section className='all'>
