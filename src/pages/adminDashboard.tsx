@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../utilities/database/firebaseClient';
-import { uploadCoverToCloudinary, submitAlbumToFirebase } from '../utilities/database/firebaseInteractions';
+import { uploadCoverToCloudinary, submitAlbumToFirebase, seedTestAlbums } from '../utilities/database/firebaseInteractions';
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -73,6 +73,11 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    async function handleSeedAlbums() {
+        await seedTestAlbums();
+        alert('15 test albums added successfully');
+    }
+
     async function handleLogout() {
         await signOut(auth);
         navigate('/');
@@ -142,6 +147,9 @@ const AdminDashboard: React.FC = () => {
                     <button type="submit" className="adminButton">Add Album</button>
                 </form>
             </section>
+            <button onClick={handleSeedAlbums} className="adminButton">
+                Seed 15 Test Albums
+            </button>
             <button onClick={handleLogout} className="adminButton">
                 Logout
             </button>

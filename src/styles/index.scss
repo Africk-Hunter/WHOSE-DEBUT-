@@ -1,42 +1,17 @@
-@import './variables';
-@import './admin';
-@import './albumView';
-@import './archive';
-@import './footer';
-@import './main';
-@import './stillFresh';
-@import './about';
-@import './Contact';
+@use './admin';
+@use './albumView';
+@use './archive';
+@use './footer';
+@use './main';
+@use './loadingScreen';
+@use './stillFresh';
+@use './about';
+@use './Contact';
+@use './base';
+// Must be the literal last @use in this file — Sass emits each used module's
+// CSS in load order, and base's unconditional rules would otherwise win
+// same-specificity ties against this file's mobile media query regardless of
+// import order.
+@use './mobile';
+
 @import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap');
-
-html {
-  background: $background-color;
-  scroll-snap-type: y mandatory;
-  overflow-y: scroll;
-  height: 100vh;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Do Hyeon", sans-serif;
-}
-
-body {
-  font-family: $font-family;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-#root {
-  width: 100%;
-  min-height: 100vh;
-
-}
-
-.all {
-  scroll-snap-type: mandatory;
-  scroll-snap-points-y: repeat(300px);
-  scroll-snap-type: y mandatory;
-}

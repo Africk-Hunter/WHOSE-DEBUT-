@@ -9,9 +9,15 @@
 
 .stillFreshAlbums {
     display: grid;
-    width: 80%;
-    grid-template-columns: repeat(5, 20%);
-    grid-template-rows: 2;
+    grid-template-columns: repeat(5, 186px);
+    justify-content: center;
+    column-gap: 44px;
+    row-gap: 40px;
     margin: auto 0 auto 0;
-    row-gap: 2rem;
+
+    @media (max-width: 1024px) {
+        grid-template-columns: repeat(3, 150px);
+        column-gap: 32px;
+        row-gap: 32px;
+    }
 }

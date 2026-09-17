@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Do not show your reasoning or thinking process
 - If you have a hypothesis, state it in one sentence and implement the fix immediately
 - Never list multiple possible causes — pick the most likely one and try it
+- For visual/layout/styling changes, ask the user how it looks after making the change instead of launching a browser (e.g. Playwright) and taking screenshots yourself
 
 ## Commands
 

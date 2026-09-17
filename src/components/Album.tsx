@@ -7,10 +7,11 @@ interface AlbumProps {
     artist: string;
     image: string;
     id: string;
+    rank?: number;
 }
 
 
-const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id }) => {
+const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, rank }) => {
     const navigate = useNavigate();
 
     function viewAlbum() {
@@ -21,6 +22,7 @@ const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id }) => {
     return (
         <div className={`album ${type === 'stillFresh' ? 'album--small' : ''}`} onClick={viewAlbum}>
             <div className="albumImgHolder">
+                {rank != null && <span className="rankBadge">{String(rank).padStart(2, '0')}</span>}
                 <img src={image} alt={title} className="albumImage" />
             </div>
             <div className="textHolder">

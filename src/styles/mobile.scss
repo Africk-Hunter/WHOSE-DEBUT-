@@ -1,0 +1,602 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// WHOSE DEBUT? — mobile layer
+// Only contains rules inside `@media (max-width: 768px)`, so desktop is
+// untouched. Superseded 768px/480px blocks in the page partials have been
+// removed to avoid conflicting with this file.
+// ─────────────────────────────────────────────────────────────────────────────
+
+$mb-bg: #FAF5F0;
+$mb-ink: #111111;
+$mb-ink-soft: #3A342E;
+$mb-muted: #6B6259;
+$mb-placeholder: #9A9086;
+$mb-frame: 3px;
+$mb-gutter: 20px;
+
+@mixin mb-frame { border: $mb-frame solid $mb-ink; }
+
+@media (max-width: 768px) {
+
+  // Full-height scroll-snapped panels are what left the dead space at the
+  // bottom of every mobile screen. Let mobile scroll normally.
+  html {
+    scroll-snap-type: none;
+    height: auto;
+  }
+
+  .all { scroll-snap-type: none; }
+
+  // ── shared chrome ──────────────────────────────────────────────────────────
+  // 3-column grid (arrow | header | matching spacer) instead of flex — a flex
+  // row only reserves space for the arrow on the left, so hiding it (opacity:0
+  // still occupies its box) or showing it biases the centered header text off
+  // to one side. The grid's empty third column keeps it centered either way.
+  .topBar {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 22px $mb-gutter 0 $mb-gutter;
+  }
+
+  .pageHeader {
+    font-size: 2.5rem;   // 40px
+    line-height: .95;
+    text-align: center;
+  }
+
+  .backArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;         // keep the tap target even when the arrow is hidden
+    height: 44px;
+    flex-shrink: 0;
+
+    .arrowImage { height: 1.75rem; }
+  }
+
+  // Home's and Still Fresh's arrows stay hidden — only Archive's has a real
+  // destination (back to top), so only it becomes visible + tappable.
+  .archive .backArrow {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .divider {
+    height: 14px;
+    margin-top: 14px;
+  }
+
+  // pins the CTA row to the bottom of the (min-height: 100vh) section instead
+  // of leaving it wherever the content above happens to end
+  .bottomBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    margin-top: auto;
+    padding: 16px $mb-gutter 18px $mb-gutter;
+  }
+
+  .contactLink {
+    max-width: 250px;
+    font-size: .9375rem;  // 15px
+    line-height: 1.2;
+    color: $mb-muted;
+  }
+
+  .scrollArrow .arrowImage { height: 1.75rem; }
+
+  // ── 01 · home ──────────────────────────────────────────────────────────────
+  .main {
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 0;
+  }
+
+  .topThree {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+    padding: 22px $mb-gutter 0 $mb-gutter;
+    // desktop centers topThree vertically between the divider and bottomBar via
+    // `margin: auto 0` on a flex `.main` — mobile was zeroing that margin,
+    // which pinned the grid to the top and left dead space below it instead.
+    margin: auto 0;
+
+    // #1 is the hero: centred, larger, spans both columns
+    > .album:first-child {
+      grid-column: 1 / -1;
+      align-items: center;
+      margin-bottom: 6px;
+
+      .albumImgHolder { width: 238px; height: 238px; }
+      .textHolder     { width: 238px; }
+      .albumTitle     { font-size: 1.625rem; line-height: 1.05; }   // 26px
+      .artistName     { font-size: 1.0625rem; }                      // 17px
+    }
+  }
+
+  .album {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    // no hover scale on touch
+    &:hover { transform: none; }
+  }
+
+  .albumImgHolder {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    background: none;
+    outline: none;
+    @include mb-frame;
+  }
+
+  .textHolder { width: 100%; }
+  .albumTitle { font-size: 1.1875rem; line-height: 1.05; }  // 19px
+  .artistName { font-size: .9375rem; opacity: 1; color: $mb-muted; }
+
+  // ── 02 · still fresh ───────────────────────────────────────────────────────
+  .stillFresh {
+    height: auto;
+    min-height: 100vh;
+
+    // stillFresh.scss's `.stillFresh .pageHeader { font-size: 5rem }` (two
+    // classes) otherwise outranks the shared `.pageHeader` rule above (one
+    // class) regardless of source order — keep it matching WHOSE DEBUT?'s size.
+    .pageHeader { font-size: 2.5rem; }
+    .divider { display: block; }
+  }
+
+  .stillFreshAlbums {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 16px;
+    width: 100%;
+    padding: 20px $mb-gutter 0 $mb-gutter;
+    overflow: visible;   // was a horizontal scroller; vertical grid reads better
+
+    .album--small {
+      .albumImgHolder { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+      .textHolder     { width: 100%; }
+      .albumTitle     { font-size: 1.125rem; }   // 18px
+      .artistName     { font-size: .875rem; }    // 14px
+    }
+  }
+
+  // Optional rank badge — add <span className="rankBadge">04</span> inside
+  // .albumImgHolder to keep chart position legible in a grid.
+  .rankBadge {
+    position: absolute;
+    top: -$mb-frame;
+    left: -$mb-frame;
+    padding: 3px 7px;
+    background: $mb-ink;
+    color: $mb-bg;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .6875rem;
+  }
+  .albumImgHolder { position: relative; }
+
+  // ── 03 · archive ───────────────────────────────────────────────────────────
+  .archive {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .gridHolder {
+    width: 100%;
+    padding: 24px $mb-gutter 32px $mb-gutter;
+  }
+
+  .archiveGrid {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding-left: 34px;
+    padding-bottom: 20px;
+
+    .spine {
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: $mb-ink;
+    }
+
+    // month node: hollow dot — centered on the spine (spine is left:7px,
+    // width:4px → center at 9px; circle width 10px → left = 9 - 10/2 = 4px)
+    .circle {
+      position: absolute;
+      left: -3px;
+      top: 0px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: $mb-bg;
+      border: $mb-frame solid $mb-ink;
+    }
+
+    // year node: solid dot, label + rule + count
+    &.year {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      // archive.scss's `.archiveGrid.year .spine { display: flex; height: 15rem }`
+      // has the same 3-class specificity and would otherwise win by matching
+      // it — neutralize so the spine keeps stretching via top:0/bottom:0.
+      .spine {
+        display: block;
+        height: auto;
+      }
+
+      // centered on the spine (spine center at 9px; circle width 18px → left = 9 - 18/2 = 0px)
+      .circle {
+        left: -6.5px;
+        top: 3px;
+        width: 18px;
+        height: 18px;
+        border: none;
+        background: $mb-ink;
+      }
+
+      // archive.scss's start/end variants add their own transform/position
+      // tweaks (translateY, bottom offsets) for the old grid-based desktop
+      // layout — neutralize them so the absolutely-positioned mobile spine
+      // and dot aren't knocked out of place.
+      &.start .spine { transform: none; }
+      &.start .circle { top: -1px; }
+
+      .archiveMonth {
+        font-family: inherit;
+        font-size: 1.75rem;      // 28px
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: none;
+        color: $mb-ink;
+      }
+
+      // add <div class="yearRule"></div> + <span class="yearCount">2 DEBUTS</span>
+      // after .archiveMonth in the year branch of ArchiveEntry
+      .yearRule {
+        flex: 1;
+        height: 2px;
+        background: $mb-ink;
+      }
+
+      .yearCount {
+        display: block;
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: .6875rem;
+        letter-spacing: .1em;
+        color: #8A7F72;
+      }
+    }
+
+    // terminating node: <ArchiveEntry type="year" position="end" />
+    // Nothing comes after this circle, so the spine stops at its center
+    // instead of stretching to the row's full height like every other row.
+    &.end {
+      .spine { transform: none; bottom: auto; height: 12px; }
+      .circle { bottom: auto; }
+
+      .archiveMonth::after {
+        content: 'START OF THE ARCHIVE';
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: .6875rem;
+        letter-spacing: .14em;
+        color: #8A7F72;
+      }
+    }
+  }
+
+  .archiveMonth {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .75rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: $mb-muted;
+  }
+
+  .archiveAlbums {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+
+    .albumBox {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      // archive.scss's kept 1024px tier sets a fixed 10rem width on .albumBox;
+      // this two-class selector (0,0,2,0) outranks it regardless of source
+      // order and keeps each box filling its grid column instead of overflowing.
+      width: 100%;
+      margin: 0;
+    }
+
+    .cover {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      @include mb-frame;
+    }
+
+    .archiveTitle {
+      font-size: .8125rem;   // 13px
+      line-height: 1.15;
+    }
+
+    // add <h3 class="archiveArtist">{album.artist}</h3> under .archiveTitle
+    .archiveArtist {
+      display: block;
+      font-size: .6875rem;   // 11px
+      line-height: 1.15;
+      font-weight: normal;
+      color: $mb-muted;
+    }
+  }
+
+  // ── 04 · album detail ──────────────────────────────────────────────────────
+  .albumView {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    height: auto;
+    min-height: 100vh;
+    padding: 18px $mb-gutter 24px $mb-gutter;
+  }
+
+  // wraps .back + .albumBreadcrumb; display:contents on desktop keeps .back
+  // a direct flex child of .albumView unchanged there.
+  .albumTopRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .albumBreadcrumb {
+    display: block;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .75rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: $mb-muted;
+  }
+
+  .back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-left: -10px;
+
+    img { width: 26px; }
+  }
+
+  // single column — no more side-by-side cover + icon strip
+  .albumInfo {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-left: 0;
+    gap: 18px;
+  }
+
+  .cover {
+    order: 0;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .infoSection {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 18px;
+  }
+
+  .leftInfo {
+    order: 0;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .albumTitleView  { font-size: 2.125rem; line-height: .98; }  // 34px
+  .albumArtistView { font-size: 1.25rem; line-height: 1.1; opacity: 1; color: $mb-muted; }
+
+  // genres as outlined chips (the 40%-opacity grey was failing contrast).
+  // markup: <ul class="genres"><li>Soul</li><li>Funk</li></ul>
+  .genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+    padding: 0;
+    list-style: none;
+    opacity: 1;
+
+    li {
+      padding: 4px 9px;
+      border: 1.5px solid $mb-ink;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: .6875rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: $mb-ink;
+    }
+  }
+
+  .listenLabel {
+    display: block;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .75rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: $mb-muted;
+  }
+
+  // labelled 48px tap targets instead of a column of 28px icons
+  .links {
+    order: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    width: 100%;
+
+    .link {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 9px;
+      height: 48px;
+      padding: 0 12px;
+      box-sizing: border-box;
+      @include mb-frame;
+      font-size: 1.0625rem;
+      color: $mb-ink;
+      text-decoration: none;
+    }
+
+    .linkImg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      &:hover { transform: none; }
+    }
+  }
+
+  .albumReviews {
+    width: 100%;
+    gap: 18px;
+  }
+
+  .label  { font-size: 1.5rem; line-height: 1; }   // 24px
+  .review {
+    font-size: 1rem;
+    line-height: 1.5;
+    text-align: left;        // justified Do Hyeon at 390px opens rivers
+    text-wrap: pretty;
+    opacity: 1;
+    color: $mb-ink-soft;
+  }
+
+  // keep the CTA on mobile — it was display:none
+  .albumViewCTA {
+    position: static;
+    display: block;
+    margin-top: 4px;
+    font-size: .9375rem;
+    color: $mb-muted;
+  }
+
+  // ── 05 · about + contact ───────────────────────────────────────────────────
+  .about { min-height: 100vh;
+  gap: 0rem; }
+
+  .aboutContent {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 18px;
+    padding: 18px $mb-gutter 24px $mb-gutter;
+  }
+
+  .aboutText {
+    width: 100%;
+    font-size: 1rem;
+    line-height: 1.55;
+    text-align: left;
+    text-wrap: pretty;
+    color: $mb-ink-soft;
+  }
+
+  .hunter {
+    margin-top: 12px;
+    text-align: right;
+    color: $mb-muted;
+  }
+
+  // bottom link back to the main site — hidden on desktop by default
+  .backToMain {
+    display: block;
+    margin-top: 12px;
+    font-size: .9375rem;
+    text-decoration: underline;
+    color: $mb-muted;
+  }
+
+  .contact, .emailOptionsWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  // .formInput carries its own frame on mobile — the desktop container's
+  // border/radius/fixed-height would otherwise nest a second, mismatched
+  // border around it.
+  .userEmailContainer, .userMessageContainer {
+    width: 100%;
+    height: auto;
+    border: none;
+    border-radius: 0;
+  }
+
+  .formInput {
+    width: 100%;
+    padding: 0 12px;
+    @include mb-frame;
+    border-radius: 0;
+    background: $mb-bg;
+    font-family: inherit;
+    font-size: 1rem;      // 16px — anything smaller triggers iOS zoom on focus
+    color: $mb-ink;
+    -webkit-appearance: none;
+
+    &::placeholder { color: $mb-placeholder; }
+  }
+
+  input.formInput { height: 48px; }
+
+  textarea.formInput {
+    height: 150px;
+    padding: 11px 12px;
+    line-height: 1.4;
+    resize: vertical;
+  }
+
+  .buttonWrapper { width: 100%; }
+
+  .messageSubmitButton {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: 0;
+    background: $mb-ink;
+    color: $mb-bg;
+    font-family: inherit;
+    font-size: 1.1875rem;
+    letter-spacing: .02em;
+  }
+
+  .thankYouText {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: $mb-ink-soft;
+  }
+}

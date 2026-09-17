@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ArchiveEntry from './ArchiveEntry';
 import { getParsedLocalStorage } from '../utilities/localStorageHandling';
 
@@ -6,8 +7,9 @@ interface ArchiveProps { }
 
 
 const Archive: React.FC<ArchiveProps> = ({ }) => {
+    const navigate = useNavigate();
     const [albums, setAlbums] = useState<any[]>([]);
-    const [albumYears, setAlbumYears] = useState<Number[]>([])
+    const [albumYears] = useState<Number[]>([])
 
     const month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -22,26 +24,15 @@ const Archive: React.FC<ArchiveProps> = ({ }) => {
 
     }, [])
 
-    function getAlbumYear(album) {
+    function getAlbumYear(album: any) {
         const year = album.year_released.slice(0, 4)
         return year;
     }
 
-    function getAlbumMonth(album) {
+    function getAlbumMonth(album: any) {
         const monthDate = parseInt(album.year_released.slice(5, 7))
         const monthName = month[monthDate - 1]
         return monthName;
-    }
-
-    function getPositionType(index: number) {
-        if (index == 0) {
-            return 'start'
-        }
-        if (index == albums.length) {
-            return 'start'
-        }
-        return '';
-
     }
 
     function isYearBeingTracked(year: number) {
@@ -88,6 +79,7 @@ const Archive: React.FC<ArchiveProps> = ({ }) => {
                     month={String(currentYear)}
                     position={position}
                     albums={[]}
+                    count={currentYearAlbums.length}
                 />
             );
 
@@ -119,39 +111,24 @@ const Archive: React.FC<ArchiveProps> = ({ }) => {
             }
         }
 
+        elements.push(
+            <ArchiveEntry key="end" type='year' month='' position='end' albums={[]} />
+        );
+
         return elements;
     }
-
-    function renderAlbumEntry(album: any, index: number) {
-        const albumYear = getAlbumYear(album);
-        const prevAlbumYear = index > 0 ? getAlbumYear(albums[index - 1]) : null;
-        const showYearSeparator = albumYear !== prevAlbumYear;
-
-
-
-        return (
-            <React.Fragment key={index}>
-                {showYearSeparator && (
-                    <ArchiveEntry type='year' month={albumYear} position={getPositionType(index)} albums={[]} />
-                )}
-                <ArchiveEntry type='month' month={getAlbumMonth(album)} position='' albums={[]} />
-            </React.Fragment>
-        );
-    }
-
 
     return (
         <section className="archive" >
             <section className="topBar">
-                <button className="backArrow"><img src="../../public/images/Arrow.svg" alt="" className="arrowImage" /></button>
-                <h1 className="pageHeader">THE ARCHIVE</h1>
+                <button className="backArrow" onClick={() => navigate('/')}><img src="/images/Arrow.svg" alt="" className="arrowImage" /></button>
+                <h1 className="pageHeader pageHeader--section">THE ARCHIVE</h1>
             </section>
+            <div className="divider"></div>
 
             <section className="gridHolder">
                 {displayAlbums()}
             </section>
-            <ArchiveEntry type='year' month='' position='end' albums={[]} />
-
 
         </section>
     );

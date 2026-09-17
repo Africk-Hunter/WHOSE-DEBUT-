@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import emailjs from 'emailjs-com';
-import plane from '/images/planeIcon.svg';
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -37,7 +36,7 @@ const Contact = () => {
             <FormField id='message' elementName='message' placeholderText='A little bit about yourself. What are you about? What is your album about? Keep it concise, we can discuss the details later :)' elementValue={formData.message} onChangeFunc={handleChange} />
 
             <div className="buttonWrapper">
-              <button className="messageSubmitButton" type="submit">Submit</button>
+              <button className="messageSubmitButton" type="submit">Send</button>
             </div>
           </form>
         )}
@@ -62,11 +61,11 @@ const FormField = ({ id, elementName, placeholderText, elementValue, onChangeFun
     <>
       {isMessageField ? (
         <div className='userMessageContainer'>
-          <textarea className='formInput' id={id} name={elementName} placeholder={placeholderText} value={elementValue} onChange={onChangeFunc} required />
+          <textarea className='formInput' id={id} name={elementName} placeholder={placeholderText} aria-label={placeholderText} value={elementValue} onChange={onChangeFunc} required />
         </div>
       ) : (
         <div className='userEmailContainer'>
-          <input className='formInput' id={id} name={elementName} placeholder={placeholderText} value={elementValue} onChange={onChangeFunc} type={elementType} required />
+          <input className='formInput' id={id} name={elementName} placeholder={placeholderText} aria-label={placeholderText} value={elementValue} onChange={onChangeFunc} type={elementType} required />
         </div>
       )}
     </>
