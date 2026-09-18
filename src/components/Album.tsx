@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 
 interface AlbumProps {
     type: string | null;
@@ -36,7 +37,13 @@ const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, rank }) =
         >
             <div className="albumImgHolder">
                 {rank != null && <span className="rankBadge">{String(rank).padStart(2, '0')}</span>}
-                <img src={image} alt={title} className="albumImage" />
+                <img
+                    src={optimizeCloudinaryUrl(image, type === 'stillFresh' ? 400 : 700)}
+                    alt={title}
+                    className="albumImage"
+                    loading={type === 'stillFresh' ? 'lazy' : 'eager'}
+                    decoding="async"
+                />
             </div>
             <div className="textHolder">
                 <h2 className="albumTitle">{title}</h2>

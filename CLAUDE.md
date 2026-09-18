@@ -58,7 +58,7 @@ Album navigation uses a side-channel: clicking an album writes `selectedID` to `
 | `artist` | |
 | `year_released` | Full date string (YYYY-MM-DD) |
 | `artist_review` | Text from the artist about their album |
-| `from_a_peer` | Review from a peer artist |
+| `from_a_peer` | Review from a fan |
 | `genres` | |
 | `spotify`, `apple`, `bandcamp`, `amazon` | Streaming links |
 | `image_url` | Public URL from Firebase Storage |

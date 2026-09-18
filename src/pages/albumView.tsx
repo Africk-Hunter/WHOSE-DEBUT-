@@ -4,6 +4,7 @@ import { pullAlbumInfoByID, getParsedGenres } from '../utilities/localStorageHan
 import { formatReviewText } from '../utilities/textFormatting';
 import { albumGenres } from '../utilities/genres';
 import LoadingScreen from '../components/LoadingScreen';
+import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 
 function isSafeUrl(url: string): boolean {
     try {
@@ -46,7 +47,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                 <span className="albumBreadcrumb">WHOSE DEBUT?</span>
             </div>
             <section className="albumInfo">
-                <img src={album.image_url} alt={`${album.name} by ${album.artist}`} className="cover" />
+                <img src={optimizeCloudinaryUrl(album.image_url, 800)} alt={`${album.name} by ${album.artist}`} className="cover" decoding="async" />
                 <div className="infoSection">
                     <div className="leftInfo">
                         <div className="nameAndArtist">
@@ -56,7 +57,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                         <ul className="genres">
                             {albumGenres(album).map(slug => (
                                 <li key={slug}>
-                                    <Link to={`/?genre=${slug}#archive`}>{genreLabels[slug] ?? slug}</Link>
+                                    <Link to={`/?genre=${slug}#archive`} state={{ fromGenreChip: true }}>{genreLabels[slug] ?? slug}</Link>
                                 </li>
                             ))}
                         </ul>
@@ -78,8 +79,8 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                     <p className="review" dangerouslySetInnerHTML={{ __html: formatReviewText(album.artist_review ?? '') }} />
                 </div>
                 {album.from_a_peer && (
-                    <div className="peerReivew">
-                        <h2 className="label">From a Peer:</h2>
+                    <div className="fanReview">
+                        <h2 className="label">From a Fan:</h2>
                         <p className="review" dangerouslySetInnerHTML={{ __html: formatReviewText(album.from_a_peer) }} />
                     </div>
                 )}

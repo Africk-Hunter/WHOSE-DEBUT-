@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ArchiveEntry from './ArchiveEntry';
 import { getParsedLocalStorage, getParsedGenres } from '../utilities/localStorageHandling';
 import { albumGenres, computeAvailableGenres, GenreSlug } from '../utilities/genres';
@@ -79,8 +79,19 @@ function buildBuckets(pool: Album[], selected: GenreSlug[]): YearBucket[] {
 
 const Archive: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [albums, setAlbums] = useState<Album[]>([]);
     const [genreLabels, setGenreLabels] = useState<Record<string, string>>({});
+    const [showBack, setShowBack] = useState(false);
+
+    // Latched, not derived: `useGenreFilter`'s commit() replaces the URL/state
+    // on every in-page filter toggle, which would otherwise wipe this as soon
+    // as the user touches a genre chip inside the Archive itself.
+    useEffect(() => {
+        if ((location.state as { fromGenreChip?: boolean } | null)?.fromGenreChip) {
+            setShowBack(true);
+        }
+    }, [location.state]);
 
     useEffect(() => {
         setAlbums(getParsedLocalStorage() || []);
@@ -154,7 +165,12 @@ const Archive: React.FC = () => {
     return (
         <section className="archive">
             <section className="topBar">
-                <button className="backArrow" onClick={() => navigate('/')}><img src="/images/Arrow.svg" alt="" className="arrowImage" /></button>
+                <button
+                    className={`backArrow${showBack ? ' backArrow--visible' : ''}`}
+                    aria-label="Back to album"
+                    title="Back to album"
+                    onClick={() => { setShowBack(false); navigate(-1); }}
+                ><img src="/images/Arrow.svg" alt="" className="arrowImage" /></button>
                 <h1 className="pageHeader pageHeader--section">THE ARCHIVE</h1>
             </section>
             <div className="divider"></div>

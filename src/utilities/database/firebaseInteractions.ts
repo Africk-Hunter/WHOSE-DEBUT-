@@ -10,7 +10,7 @@ interface AlbumData {
     releaseDate: string;
     genres: GenreSlug[];
     description: string;
-    fromapeer: string;
+    fromafan: string;
     spotify: string;
     apple: string;
     amazon: string;
@@ -59,7 +59,7 @@ async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string): Pr
             artist: albumData.artist,
             year_released: albumData.releaseDate,
             artist_review: albumData.description,
-            from_a_peer: albumData.fromapeer,
+            from_a_peer: albumData.fromafan,
             genres: albumData.genres,
             spotify: albumData.spotify,
             apple: albumData.apple,
@@ -98,7 +98,7 @@ async function seedTestAlbums(): Promise<void> {
         'We wanted to make something that sounded like driving through the Nevada desert at dusk — wide open and a little lonesome.',
     ];
 
-    const peerReviews = [
+    const fanReviews = [
         "One of the most honest debuts I've heard from a local act. You can tell these songs were lived in before they were recorded.",
         "This record sounds like it was made by people who actually have something to say. That's rarer than it should be.",
         'Incredible first effort. The production is stripped back in all the right ways and lets the songwriting breathe.',
@@ -121,7 +121,7 @@ async function seedTestAlbums(): Promise<void> {
             artist: artists[i],
             year_released: `${year}-${month}-${day}`,
             artist_review: artistReviews[i % artistReviews.length],
-            from_a_peer: peerReviews[i % peerReviews.length],
+            from_a_peer: fanReviews[i % fanReviews.length],
             genres: [genre.slug],
             spotify: '',
             apple: '',

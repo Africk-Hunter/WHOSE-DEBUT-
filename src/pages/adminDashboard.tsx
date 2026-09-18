@@ -29,7 +29,7 @@ const AdminDashboard: React.FC = () => {
         releaseDate: '',
         genres: [] as string[],
         description: '',
-        fromapeer: '',
+        fromafan: '',
         spotify: '',
         apple: '',
         bandcamp: '',
@@ -151,7 +151,7 @@ const AdminDashboard: React.FC = () => {
                 releaseDate: '',
                 genres: [],
                 description: '',
-                fromapeer: '',
+                fromafan: '',
                 spotify: '',
                 apple: '',
                 bandcamp: '',
@@ -245,8 +245,8 @@ const AdminDashboard: React.FC = () => {
                             <textarea id="description" name="description" value={albumData.description} onChange={handleInputChange} rows={4} />
                         </div>
                         <div className="formGroup">
-                            <label htmlFor="fromapeer">From a Peer</label>
-                            <textarea id="fromapeer" name="fromapeer" value={albumData.fromapeer} onChange={handleInputChange} rows={4} />
+                            <label htmlFor="fromafan">From a Fan</label>
+                            <textarea id="fromafan" name="fromafan" value={albumData.fromafan} onChange={handleInputChange} rows={4} />
                         </div>
                     </div>
 

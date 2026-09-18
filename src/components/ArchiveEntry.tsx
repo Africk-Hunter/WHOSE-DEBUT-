@@ -1,5 +1,6 @@
 import React from 'react';
 import { Album } from '../utilities/types';
+import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 
 interface ArchiveEntryProps {
     kind: 'year' | 'month';
@@ -60,7 +61,7 @@ const ArchiveEntry: React.FC<ArchiveEntryProps> = ({
                         {albums.map(album => (
                             <div className="albumBox" key={album.id}>
                                 <img
-                                    src={album.image_url}
+                                    src={optimizeCloudinaryUrl(album.image_url, 250)}
                                     alt={`${album.name} by ${album.artist}`}
                                     className="cover"
                                     loading="lazy"

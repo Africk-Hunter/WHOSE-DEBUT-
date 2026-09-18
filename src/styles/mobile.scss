@@ -57,9 +57,10 @@ $mb-gutter: 20px;
     .arrowImage { height: 1.75rem; }
   }
 
-  // Home's and Still Fresh's arrows stay hidden — only Archive's has a real
-  // destination (back to top), so only it becomes visible + tappable.
-  .archive .backArrow {
+  // Home's and Still Fresh's arrows stay hidden. Archive's arrow is only
+  // visible + tappable when explicitly marked visible (arrived via a
+  // genre-chip link from an album), same toggle as desktop.
+  .archive .backArrow.backArrow--visible {
     opacity: 1;
     pointer-events: all;
   }
