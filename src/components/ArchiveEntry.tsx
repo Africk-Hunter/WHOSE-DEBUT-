@@ -9,8 +9,6 @@ interface ArchiveEntryProps {
     matched?: number;
     total?: number;
     albums?: Album[];
-    empty?: boolean;
-    emptyLabel?: string;
     onSelectAlbum?: (id: string) => void;
 }
 
@@ -21,8 +19,6 @@ const ArchiveEntry: React.FC<ArchiveEntryProps> = ({
     matched,
     total,
     albums = [],
-    empty = false,
-    emptyLabel,
     onSelectAlbum,
 }) => {
     if (kind === 'year') {
@@ -48,41 +44,35 @@ const ArchiveEntry: React.FC<ArchiveEntryProps> = ({
     }
 
     return (
-        <section className={`archiveGrid ${empty ? 'archiveGrid--empty' : ''}`}>
+        <section className="archiveGrid">
             <div className="spine">
-                <div className={`circle ${empty ? 'circle--empty' : ''}`}></div>
+                <div className="circle"></div>
             </div>
-            {empty ? (
-                <div className="archiveMonth archiveMonth--empty">{label} &middot; {emptyLabel}</div>
-            ) : (
-                <>
-                    <div className="archiveMonth">{label}</div>
-                    <section className="archiveAlbums">
-                        {albums.map(album => (
-                            <div className="albumBox" key={album.id}>
-                                <img
-                                    src={optimizeCloudinaryUrl(album.image_url, 250)}
-                                    alt={`${album.name} by ${album.artist}`}
-                                    className="cover"
-                                    loading="lazy"
-                                    decoding="async"
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => onSelectAlbum?.(album.id)}
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            onSelectAlbum?.(album.id);
-                                        }
-                                    }}
-                                />
-                                <h2 className="archiveTitle">{album.name}</h2>
-                                <h3 className="archiveArtist">{album.artist}</h3>
-                            </div>
-                        ))}
-                    </section>
-                </>
-            )}
+            <div className="archiveMonth">{label}</div>
+            <section className="archiveAlbums">
+                {albums.map(album => (
+                    <div className="albumBox" key={album.id}>
+                        <img
+                            src={optimizeCloudinaryUrl(album.image_url, 250)}
+                            alt={`${album.name} by ${album.artist}`}
+                            className="cover"
+                            loading="lazy"
+                            decoding="async"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => onSelectAlbum?.(album.id)}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onSelectAlbum?.(album.id);
+                                }
+                            }}
+                        />
+                        <h2 className="archiveTitle">{album.name}</h2>
+                        <h3 className="archiveArtist">{album.artist}</h3>
+                    </div>
+                ))}
+            </section>
         </section>
     );
 };

@@ -185,6 +185,17 @@ $mb-gutter: 20px;
     font-family: ui-monospace, Menlo, monospace;
     font-size: .6875rem;
   }
+  .genreBadge {
+    position: absolute;
+    bottom: -$mb-frame;
+    right: -$mb-frame;
+    padding: 3px 7px;
+    background: $mb-ink;
+    color: $mb-bg;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .6875rem;
+    text-transform: uppercase;
+  }
   .albumImgHolder { position: relative; }
 
   // ── 03 · archive ───────────────────────────────────────────────────────────

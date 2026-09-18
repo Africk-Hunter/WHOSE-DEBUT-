@@ -1,16 +1,3 @@
-function addAlbumToLocalStorage(album: { id: string }) {
-    let currentAlbums = localStorage.getItem('albums');
-    if (currentAlbums === null) {
-        localStorage.setItem('albums', JSON.stringify([album]));
-    } else {
-        const parsed = JSON.parse(currentAlbums);
-        if (Array.isArray(parsed) && !parsed.some((a: { id: string }) => a.id === album.id)) {
-            parsed.push(album);
-            localStorage.setItem('albums', JSON.stringify(parsed));
-        }
-    }
-}
-
 function sortAlbumsByReleaseDate() {
     const parsed = getParsedLocalStorage()
     if (Array.isArray(parsed)) {
@@ -52,7 +39,6 @@ function getParsedGenres() {
 }
 
 export {
-    addAlbumToLocalStorage,
     sortAlbumsByReleaseDate,
     pullAlbumInfoByID,
     getParsedLocalStorage,

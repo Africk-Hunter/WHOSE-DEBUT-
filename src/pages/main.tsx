@@ -128,6 +128,7 @@ function Main() {
                             image={album.image_url}
                             id={album.id}
                             rank={album.rank}
+                            genre={album.genres?.[0]}
                         />
                     ))}
                 </section>
@@ -156,6 +157,7 @@ function Main() {
                             image={album.image_url}
                             id={album.id}
                             rank={album.rank}
+                            genre={album.genres?.[0]}
                         />
                     ))}
                 </section>

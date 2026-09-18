@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebaseClient';
 import { GenreEntry, slugify } from '../genres';
 
@@ -31,10 +31,13 @@ async function getOrCreateGenre(rawLabel: string): Promise<GenreEntry> {
         throw new Error('Genre label cannot be empty');
     }
 
+    const bySlug = await getDoc(doc(db, 'genres', slug));
+    if (bySlug.exists()) {
+        return { slug, label: (bySlug.data().label as string) ?? slug };
+    }
+
     const all = await fetchAllGenres();
-    const existing = all.find(
-        g => g.slug === slug || g.label.trim().toLowerCase() === label.toLowerCase()
-    );
+    const existing = all.find(g => g.label.trim().toLowerCase() === label.toLowerCase());
     if (existing) return existing;
 
     await setDoc(doc(db, 'genres', slug), { label });

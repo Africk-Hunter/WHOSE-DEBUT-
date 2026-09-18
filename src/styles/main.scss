@@ -155,6 +155,18 @@
     font-size: .875rem;
 }
 
+.genreBadge {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    padding: 5px 10px;
+    background: $ink;
+    color: $background-color;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .875rem;
+    text-transform: uppercase;
+}
+
 // Smaller album variant for still fresh section
 .album--small {
     .albumImgHolder { height: 186px; width: 186px; }

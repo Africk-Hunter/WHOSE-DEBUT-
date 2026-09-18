@@ -116,18 +116,6 @@
     color: $muted;
 }
 
-.archiveGrid--empty {
-    padding-bottom: 1.25rem;
-
-    .circle--empty {
-        background: #E0D6C9;
-    }
-
-    .archiveMonth--empty {
-        color: #9A9086;
-    }
-}
-
 .archiveAlbums {
     display: grid;
     grid-template-columns: repeat(5, 150px);

@@ -1,6 +1,5 @@
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { db } from './firebaseClient';
-import { addAlbumToLocalStorage } from '../localStorageHandling';
 import { GenreSlug, SEED_GENRES } from '../genres';
 import { getOrCreateGenre } from './genreInteractions';
 
@@ -20,9 +19,8 @@ interface AlbumData {
 async function loadAlbumsFromDatabase() {
     try {
         const snapshot = await getDocs(collection(db, 'albums'));
-        snapshot.forEach(doc => {
-            addAlbumToLocalStorage({ id: doc.id, ...doc.data() });
-        });
+        const albums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('albums', JSON.stringify(albums));
     } catch (error) {
         console.error('Error loading albums from Firestore:', error);
     }

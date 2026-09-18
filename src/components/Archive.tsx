@@ -122,10 +122,6 @@ const Archive: React.FC = () => {
 
     const matchedTotal = countForSelection(selected);
 
-    const emptyLabel = selected.length === 1
-        ? `No ${genreLabels[selected[0]] ?? selected[0]} debuts`
-        : 'No matching debuts';
-
     function viewAlbum(id: string) {
         localStorage.setItem('selectedID', id);
         navigate(`/album/${id}`);
@@ -145,15 +141,13 @@ const Archive: React.FC = () => {
         );
 
         yearBucket.months.forEach(m => {
-            const monthEmpty = active && m.matched.length === 0;
+            if (active && m.matched.length === 0) return;
             elements.push(
                 <ArchiveEntry
                     key={`${yearBucket.year}-${m.month}`}
                     kind="month"
                     label={m.month}
                     albums={active ? m.matched : m.all}
-                    empty={monthEmpty}
-                    emptyLabel={emptyLabel}
                     onSelectAlbum={viewAlbum}
                 />
             );

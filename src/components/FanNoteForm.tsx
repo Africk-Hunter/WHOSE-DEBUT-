@@ -106,8 +106,8 @@ const FanNoteForm: React.FC<FanNoteFormProps> = ({ albumId, albumName, artist })
             {!open ? (
                 <div className="fanNoteCtaResting">
                     <div className="fanNoteCtaText">
-                        <p className="fanNoteKicker">Heard the record?</p>
-                        <p>Anyone can leave a note. Name and email, that's it.</p>
+                        <p className="fanNoteKicker">Leave a note</p>
+                        <p>Did the record resonate with you? Let us know!!</p>
                     </div>
                     <button type="button" className="fanNoteButton" onClick={() => setOpen(true)}>
                         Write a fan note

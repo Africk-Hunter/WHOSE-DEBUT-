@@ -10,28 +10,24 @@
     height: 100vh;
     padding: 2.125rem 3.5rem;  // 34px 56px
     align-items: start;
-    gap: 4.5rem;   // 72px
+    gap: 1.5rem;
     overflow-y: auto;
     background: $background-color;
-    // With .albumBottomGroup forced onto its own full-width row (below), this
-    // leaves the info/reviews row pinned to the top and the fan note +
-    // CTA row pinned to the bottom of the viewport whenever there's leftover
-    // height, instead of the bottom row trailing directly under short content.
-    align-content: space-between;
+    align-content: flex-start;
 
     @media (max-width: 1024px) {
         padding: 2rem;
-        gap: 2rem;
+        gap: 1rem;
     }
 
     @media (min-width: 1440px) {
         padding: 2.89rem 4.96rem;
-        gap: 4.96rem;
+        gap: 1.75rem;
     }
 
     @media (min-width: 1800px) {
         padding: 3.72rem 7.43rem 3.72rem 3rem;
-        gap: 6.61rem;
+        gap: 2rem;
     }
 }
 
