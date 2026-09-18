@@ -19,8 +19,21 @@ const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, rank }) =
         navigate(`/album/${id}`);
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            viewAlbum();
+        }
+    };
+
     return (
-        <div className={`album ${type === 'stillFresh' ? 'album--small' : ''}`} onClick={viewAlbum}>
+        <div
+            className={`album ${type === 'stillFresh' ? 'album--small' : ''}`}
+            onClick={viewAlbum}
+            onKeyDown={handleKeyDown}
+            role="button"
+            tabIndex={0}
+        >
             <div className="albumImgHolder">
                 {rank != null && <span className="rankBadge">{String(rank).padStart(2, '0')}</span>}
                 <img src={image} alt={title} className="albumImage" />

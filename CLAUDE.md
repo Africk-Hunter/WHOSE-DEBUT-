@@ -32,6 +32,9 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 VITE_CLOUDINARY_CLOUD_NAME=
 VITE_CLOUDINARY_UPLOAD_PRESET=
+VITE_EMAILJS_SERVICE_ID=
+VITE_EMAILJS_TEMPLATE_ID=
+VITE_EMAILJS_PUBLIC_KEY=
 ```
 
 These are consumed in [src/utilities/database/firebaseClient.ts](src/utilities/database/firebaseClient.ts) via `import.meta.env`.
@@ -44,7 +47,7 @@ These are consumed in [src/utilities/database/firebaseClient.ts](src/utilities/d
 
 On every page load, `Main` clears `localStorage` and re-fetches all albums from Firestore, stores them locally sorted by `year_released` descending. All other pages read album data exclusively from `localStorage` — there are no additional Firebase calls outside of the initial load and admin submission.
 
-Album navigation uses a side-channel: clicking an album writes `selectedID` to `localStorage`, then navigates to `/album/:albumId`. The `AlbumView` page reads `selectedID` from localStorage to find the album — it does **not** use the route param.
+Album navigation uses a side-channel: clicking an album writes `selectedID` to `localStorage`, then navigates to `/album/:albumId`. The `AlbumView` page resolves the album by route param when present, falling back to the `selectedID` localStorage key otherwise — so a direct/shared link to `/album/:id` works even without a prior in-app click.
 
 ### Firebase Structure
 
@@ -69,7 +72,7 @@ Album navigation uses a side-channel: clicking an album writes `selectedID` to `
 | Path | Component | Notes |
 |---|---|---|
 | `/` | `Main` | Three scroll-snap sections (top 3, "Still Fresh" 4–13, Archive all) |
-| `/album/:albumId` | `AlbumView` | Reads album from localStorage via `selectedID` key |
+| `/album/:albumId` | `AlbumView` | Resolves album by route param, falling back to `selectedID` in localStorage |
 | `/about` | `About` | Platform description + EmailJS contact form |
 | `/admin` | `AdminPanel` | Firebase email/password login |
 | `/admin/dashboard` | `AdminDashboard` | Protected; form to upload cover + submit album to Firebase |
@@ -91,4 +94,4 @@ All SCSS is imported through a single entry point: [src/styles/index.scss](src/s
 - [src/utilities/database/firebaseClient.ts](src/utilities/database/firebaseClient.ts) — initializes Firebase app, exports `db`, `storage`, `auth`
 - [src/utilities/database/firebaseInteractions.ts](src/utilities/database/firebaseInteractions.ts) — `loadAlbumsFromDatabase`, `uploadCoverToCloudinary`, `submitAlbumToFirebase`
 - [src/utilities/localStorageHandling.ts](src/utilities/localStorageHandling.ts) — all localStorage read/write helpers
-- [src/utilities/types.ts](src/utilities/types.ts) — currently empty; intended for shared TypeScript types
+- [src/utilities/types.ts](src/utilities/types.ts) — shared TypeScript types (currently `Album`)

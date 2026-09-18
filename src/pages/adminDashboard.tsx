@@ -6,15 +6,19 @@ import { uploadCoverToCloudinary, submitAlbumToFirebase, seedTestAlbums } from '
 import { fetchAllGenres, seedGenresIfEmpty, getOrCreateGenre } from '../utilities/database/genreInteractions';
 import { previewGenreMigration, runGenreMigration, MigrationReport } from '../utilities/database/migrateGenres';
 import { GenreEntry, SEED_GENRES } from '../utilities/genres';
+import LoadingScreen from '../components/LoadingScreen';
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
+    const [authChecked, setAuthChecked] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (!user) {
                 navigate('/admin');
+                return;
             }
+            setAuthChecked(true);
         });
         return () => unsubscribe();
     }, [navigate]);
@@ -42,12 +46,13 @@ const AdminDashboard: React.FC = () => {
     const [migrationResult, setMigrationResult] = useState<{ converted: number } | null>(null);
 
     useEffect(() => {
+        if (!authChecked) return;
         const initGenres = async () => {
             await seedGenresIfEmpty(SEED_GENRES);
             setAvailableGenres(await fetchAllGenres());
         };
         initGenres();
-    }, []);
+    }, [authChecked]);
 
     useEffect(() => {
         if (!imageFile) {
@@ -157,6 +162,7 @@ const AdminDashboard: React.FC = () => {
     };
 
     async function handleSeedAlbums() {
+        if (!window.confirm('This will add 15 test albums to the live database. Continue?')) return;
         await seedTestAlbums();
         alert('15 test albums added successfully');
     }
@@ -165,6 +171,8 @@ const AdminDashboard: React.FC = () => {
         await signOut(auth);
         navigate('/');
     }
+
+    if (!authChecked) return <LoadingScreen />;
 
     return (
         <div className="adminDash">
@@ -247,21 +255,21 @@ const AdminDashboard: React.FC = () => {
                         <div className="formRow">
                             <div className="formGroup">
                                 <label htmlFor="spotify">Spotify</label>
-                                <input type="text" id="spotify" name="spotify" value={albumData.spotify} onChange={handleInputChange} />
+                                <input type="url" id="spotify" name="spotify" value={albumData.spotify} onChange={handleInputChange} />
                             </div>
                             <div className="formGroup">
                                 <label htmlFor="apple">Apple Music</label>
-                                <input type="text" id="apple" name="apple" value={albumData.apple} onChange={handleInputChange} />
+                                <input type="url" id="apple" name="apple" value={albumData.apple} onChange={handleInputChange} />
                             </div>
                         </div>
                         <div className="formRow">
                             <div className="formGroup">
                                 <label htmlFor="bandcamp">Bandcamp</label>
-                                <input type="text" id="bandcamp" name="bandcamp" value={albumData.bandcamp} onChange={handleInputChange} />
+                                <input type="url" id="bandcamp" name="bandcamp" value={albumData.bandcamp} onChange={handleInputChange} />
                             </div>
                             <div className="formGroup">
                                 <label htmlFor="amazon">Amazon Music</label>
-                                <input type="text" id="amazon" name="amazon" value={albumData.amazon} onChange={handleInputChange} />
+                                <input type="url" id="amazon" name="amazon" value={albumData.amazon} onChange={handleInputChange} />
                             </div>
                         </div>
                     </div>

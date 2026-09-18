@@ -5,6 +5,14 @@ import { formatReviewText } from '../utilities/textFormatting';
 import { albumGenres } from '../utilities/genres';
 import LoadingScreen from '../components/LoadingScreen';
 
+function isSafeUrl(url: string): boolean {
+    try {
+        return ['http:', 'https:'].includes(new URL(url).protocol);
+    } catch {
+        return false;
+    }
+}
+
 const services = [
     { key: 'spotify', href: 'spotify', label: 'Spotify', icon: '/images/Spotify.png' },
     { key: 'apple', href: 'apple', label: 'Apple', icon: '/images/AppleMusic.png' },
@@ -55,7 +63,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                     </div>
                     <span className="listenLabel">Listen</span>
                     <section className="links">
-                        {services.filter(s => album[s.href]).map(s => (
+                        {services.filter(s => album[s.href] && isSafeUrl(album[s.href])).map(s => (
                             <a key={s.key} href={album[s.href]} target="_blank" rel="noopener noreferrer" className="link">
                                 <img src={s.icon} alt={`Listen on ${s.label}`} className="linkImg" />
                                 <span>{s.label}</span>

@@ -1,20 +1,15 @@
-function addAlbumToLocalStorage(album: object) {
+function addAlbumToLocalStorage(album: { id: string }) {
     let currentAlbums = localStorage.getItem('albums');
     if (currentAlbums === null) {
         localStorage.setItem('albums', JSON.stringify([album]));
     } else {
         const parsed = JSON.parse(currentAlbums);
-        if (Array.isArray(parsed) && !checkIfItemExists(JSON.stringify([album]))) {
+        if (Array.isArray(parsed) && !parsed.some((a: { id: string }) => a.id === album.id)) {
             parsed.push(album);
             localStorage.setItem('albums', JSON.stringify(parsed));
         }
     }
 }
-
-const checkIfItemExists = (key: string): boolean => {
-    const itemValue = localStorage.getItem(key);
-    return itemValue !== null && itemValue !== undefined;
-};
 
 function sortAlbumsByReleaseDate() {
     const parsed = getParsedLocalStorage()
@@ -41,6 +36,7 @@ function getParsedLocalStorage() {
     if (storedAlbums) {
         return JSON.parse(storedAlbums);
     }
+    return [];
 }
 
 function setGenresInLocalStorage(genres: object[]) {

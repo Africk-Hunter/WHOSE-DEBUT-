@@ -13,7 +13,12 @@ const Contact = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    emailjs.sendForm('service_cxyb1s5', 'template_oylvcbn', e.target as HTMLFormElement, 'CBZDxMNtzcxxOowCO')
+    emailjs.sendForm(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      e.target as HTMLFormElement,
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    )
       .then((result: any) => {
         console.log(result.text);
         setSubmitted(true);

@@ -65,7 +65,15 @@ const ArchiveEntry: React.FC<ArchiveEntryProps> = ({
                                     className="cover"
                                     loading="lazy"
                                     decoding="async"
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => onSelectAlbum?.(album.id)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            onSelectAlbum?.(album.id);
+                                        }
+                                    }}
                                 />
                                 <h2 className="archiveTitle">{album.name}</h2>
                                 <h3 className="archiveArtist">{album.artist}</h3>
