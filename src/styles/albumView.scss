@@ -2,6 +2,7 @@
 
 .albumView {
     display: flex;
+    flex-wrap: wrap;   // lets a full-width child (the fan note CTA) drop to its own row
     position: fixed;
     inset: 0;
     z-index: 100;
@@ -12,6 +13,11 @@
     gap: 4.5rem;   // 72px
     overflow-y: auto;
     background: $background-color;
+    // With .albumBottomGroup forced onto its own full-width row (below), this
+    // leaves the info/reviews row pinned to the top and the fan note +
+    // CTA row pinned to the bottom of the viewport whenever there's leftover
+    // height, instead of the bottom row trailing directly under short content.
+    align-content: space-between;
 
     @media (max-width: 1024px) {
         padding: 2rem;
@@ -58,14 +64,29 @@
 }
 
 .albumViewCTA {
-    position: absolute;
-    bottom: 1.5rem;
-    left: 3.5rem;
+    margin-top: 1.5rem;
     font-size: 1rem;
     text-decoration: underline;
     color: $muted;
 
     &:visited { color: $muted; }
+}
+
+// Was `position: absolute; bottom/left` — pinned to the viewport regardless
+// of content height, which overlapped the fan note bar once that pushed the
+// page taller. Grouping it with the fan note card in one flex column and
+// letting .albumView's align-content push that whole group to the bottom
+// gets the same "anchored to the bottom" look without the overlap risk.
+.albumBottomGroup {
+    display: flex;
+    flex-direction: column;
+
+    @media (min-width: 769px) {
+        flex: 1 1 100%;
+        flex-direction: row;
+        align-items: flex-end;     // bottom-align the CTA link with the fan note card
+        justify-content: space-between;
+    }
 }
 
 .listenLabel {
@@ -197,7 +218,11 @@
 .albumReviews {
     display: flex;
     flex-direction: column;
-    flex: 1 1 auto;
+    // flex-basis 0 (not auto) so flex-wrap's line-fitting check on .albumView
+    // uses this item's shrunk size, not its content-based hypothetical width —
+    // otherwise a wide review paragraph can force it onto its own row instead
+    // of sitting beside .albumInfo.
+    flex: 1 1 0%;
     min-width: 0;
     max-width: 700px;
     height: auto;

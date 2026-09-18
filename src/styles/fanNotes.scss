@@ -1,0 +1,252 @@
+@use './variables' as *;
+
+$fn-ground: #F1E9DE;
+$fn-placeholder: #9A9086;
+
+.fanNoteCta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: $fn-ground;
+    border: 3px solid $ink;
+
+    @media (min-width: 769px) {
+        max-width: 700px;
+        order: 1;   // render after the CTA link, so the link stays left and this stays right
+    }
+
+    &.fanNoteCta--sent {
+        color: $ink-soft;
+    }
+}
+
+.fanNoteCtaResting {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    @media (min-width: 769px) {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+    }
+}
+
+.fanNoteCtaText {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.fanNoteKicker {
+    margin: 0;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: $ink;
+}
+
+.fanNoteButton {
+    align-self: flex-start;
+    flex-shrink: 0;
+    margin-top: 0.5rem;
+    height: 52px;
+    padding: 0 1.5rem;
+    background: $ink;
+    color: $background-color;
+    border: none;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.8125rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: $transition;
+
+    @media (min-width: 769px) {
+        align-self: center;
+        margin-top: 0;
+    }
+
+    @media (hover: hover) {
+        &:hover { opacity: 0.85; }
+    }
+
+    &:focus-visible {
+        outline: 3px solid $ink;
+        outline-offset: 2px;
+    }
+}
+
+@keyframes fanNoteFormIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fanNoteForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fanNoteFormIn 0.35s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
+.fanNoteFormHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h4 {
+        margin: 0;
+        font-family: 'Do Hyeon', sans-serif;
+        font-size: 1.5rem;
+    }
+}
+
+.fanNoteClose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: $ink;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 3px solid $ink;
+        outline-offset: 2px;
+    }
+}
+
+.fanNoteField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.6875rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: $muted;
+    }
+
+    input,
+    textarea {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 0 0.75rem;
+        background: $background-color;
+        color: $ink;
+        border: 3px solid $ink;
+        border-radius: 0;
+        font-family: inherit;
+        font-size: 1rem;
+        -webkit-appearance: none;
+
+        &::placeholder { color: $fn-placeholder; }
+
+        &:focus {
+            outline: none;
+            border-color: $ink;
+        }
+    }
+
+    input { height: 48px; }
+
+    textarea {
+        height: 104px;
+        padding: 0.75rem;
+        line-height: 1.4;
+        resize: vertical;
+    }
+}
+
+.fanNoteFieldCheckbox {
+    display: flex;
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        color: $muted;
+        cursor: pointer;
+    }
+
+    input[type='checkbox'] {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        accent-color: $ink;
+        cursor: pointer;
+    }
+}
+
+.fanNoteFieldLabelRow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.fanNoteCounter {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.6875rem;
+    color: $muted;
+}
+
+.fanNoteHelp {
+    font-size: 0.8125rem;
+    color: $muted;
+}
+
+.fanNoteError {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem;
+    color: #B0453A;
+}
+
+.fanNoteSubmit {
+    height: 52px;
+    padding: 0 1.5rem;
+    background: $ink;
+    color: $background-color;
+    border: none;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.8125rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: $transition;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+
+    @media (hover: hover) {
+        &:not(:disabled):hover { opacity: 0.85; }
+    }
+
+    &:focus-visible {
+        outline: 3px solid $ink;
+        outline-offset: 2px;
+    }
+}

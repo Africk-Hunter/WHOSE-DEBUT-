@@ -5,6 +5,7 @@ import { formatReviewText } from '../utilities/textFormatting';
 import { albumGenres } from '../utilities/genres';
 import LoadingScreen from '../components/LoadingScreen';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
+import FanNoteForm from '../components/FanNoteForm';
 
 function isSafeUrl(url: string): boolean {
     try {
@@ -85,7 +86,10 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                     </div>
                 )}
             </section>
-            <a href="/about" className="albumViewCTA">Are you releasing an album? Click here!</a>
+            <div className="albumBottomGroup">
+                <FanNoteForm albumId={album.id} albumName={album.name} artist={album.artist} />
+                <a href="/about" className="albumViewCTA">Are you releasing an album? Click here!</a>
+            </div>
         </main>
     );
 };

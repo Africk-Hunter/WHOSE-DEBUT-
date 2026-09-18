@@ -353,6 +353,13 @@ $mb-gutter: 20px;
   .albumView {
     display: flex;
     flex-direction: column;
+    // albumView.scss's `flex-wrap: wrap` is desktop-only in intent (lets the
+    // fan note card drop to its own row there) but still applies here unless
+    // reset: with `position: fixed; inset: 0` pinning top+bottom, `height:
+    // auto` resolves to the full viewport height instead of shrinking to
+    // content, so once content overflowed that fixed box, wrap pushed the
+    // overflow into a second column to the right instead of just scrolling.
+    flex-wrap: nowrap;
     gap: 18px;
     height: auto;
     min-height: 100vh;
@@ -484,6 +491,11 @@ $mb-gutter: 20px;
   .albumReviews {
     width: 100%;
     gap: 18px;
+    // Desktop's `flex: 1 1 auto` (albumView.scss) is unset here on purpose —
+    // .albumView is a column on mobile, so a flex-grow item stretches to eat
+    // all leftover vertical space, leaving a blank gap inside this box below
+    // short review text instead of the fan note card sitting flush after it.
+    flex: none;
   }
 
   .label  { font-size: 1.5rem; line-height: 1; }   // 24px
