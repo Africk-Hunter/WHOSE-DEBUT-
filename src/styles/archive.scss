@@ -7,7 +7,6 @@
     min-height: 100vh;
     padding-bottom: 10vh;
     scroll-snap-align: start;
-    scroll-snap-stop: always;
 }
 
 .gridHolder {
@@ -115,6 +114,18 @@
     letter-spacing: .12em;
     text-transform: uppercase;
     color: $muted;
+}
+
+.archiveGrid--empty {
+    padding-bottom: 1.25rem;
+
+    .circle--empty {
+        background: #E0D6C9;
+    }
+
+    .archiveMonth--empty {
+        color: #9A9086;
+    }
 }
 
 .archiveAlbums {

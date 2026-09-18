@@ -43,4 +43,23 @@ function getParsedLocalStorage() {
     }
 }
 
-export { addAlbumToLocalStorage, sortAlbumsByReleaseDate, pullAlbumInfoByID, getParsedLocalStorage };
+function setGenresInLocalStorage(genres: object[]) {
+    localStorage.setItem('genres', JSON.stringify(genres));
+}
+
+function getParsedGenres() {
+    const storedGenres = localStorage.getItem('genres');
+    if (storedGenres) {
+        return JSON.parse(storedGenres);
+    }
+    return [];
+}
+
+export {
+    addAlbumToLocalStorage,
+    sortAlbumsByReleaseDate,
+    pullAlbumInfoByID,
+    getParsedLocalStorage,
+    setGenresInLocalStorage,
+    getParsedGenres,
+};

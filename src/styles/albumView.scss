@@ -145,13 +145,30 @@
     font-size: 1rem;
 
     li {
-        padding: 5px 11px;
+        padding: 4px 9px;
         border: 1.5px solid $ink;
+        transition: $transition;
+
+        @media (hover: hover) {
+            &:hover {
+                background: $ink;
+
+                a {
+                    color: $background-color;
+                }
+            }
+        }
+    }
+
+    li a {
+        display: inline-block;
         font-family: ui-monospace, Menlo, monospace;
         font-size: .75rem;
         letter-spacing: .08em;
         text-transform: uppercase;
         color: $ink;
+        text-decoration: none;
+        transition: $transition;
     }
 }
 
@@ -163,7 +180,9 @@
     justify-items: center;
     width: auto;
 
-    .link span { display: none; }
+    @media (min-width: 769px) {
+        .link span { display: none; }
+    }
 
     .linkImg {
         width: 3.25rem;    // 52px

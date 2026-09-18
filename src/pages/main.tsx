@@ -1,16 +1,18 @@
-import { useRef, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useRef, useEffect, useState, useMemo } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import Album from '../components/Album'
 import Footer from '../components/Footer'
 import Archive from '../components/Archive';
 import LoadingScreen from '../components/LoadingScreen';
 import AlbumView from './albumView';
 
-import { sortAlbumsByReleaseDate, getParsedLocalStorage } from '../utilities/localStorageHandling';
+import { sortAlbumsByReleaseDate, getParsedLocalStorage, setGenresInLocalStorage } from '../utilities/localStorageHandling';
 import { loadAlbumsFromDatabase } from '../utilities/database/firebaseInteractions';
+import { fetchAllGenres } from '../utilities/database/genreInteractions';
 
 function Main() {
     const { albumId } = useParams();
+    const location = useLocation();
     const whoseDebutRef = useRef<HTMLElement>(null);
     const stillFreshRef = useRef<HTMLElement>(null);
     const archiveRef = useRef<HTMLElement>(null);
@@ -73,6 +75,8 @@ function Main() {
             sortAlbumsByReleaseDate();
             const parsed = getParsedLocalStorage();
             setAlbums(parsed);
+            const genres = await fetchAllGenres();
+            setGenresInLocalStorage(genres);
             setLoading(false);
         };
         init();
@@ -86,6 +90,24 @@ function Main() {
         };
     }, [albumId]);
 
+    // Client-side nav doesn't auto-scroll to a URL hash (this is a plain
+    // BrowserRouter, not a v6.4+ data router), and albums load async, so
+    // this has to watch both the hash and the data — it needs to fire both
+    // on a fresh reload landing on the URL and on in-app back-navigation
+    // from /album/:id, where Main never remounts.
+    useEffect(() => {
+        if (albums.length === 0) return;
+        if (location.hash === '#stillFresh') {
+            stillFreshRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (location.hash === '#archive') {
+            archiveRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [location.hash, albums.length]);
+
+    const ranked = useMemo(() => albums.map((a, i) => ({ ...a, rank: i + 1 })), [albums]);
+    const heroAlbums = useMemo(() => ranked.slice(0, 3), [ranked]);
+    const stillFreshPool = useMemo(() => ranked.slice(3, 13), [ranked]);
+
     if (loading) return <LoadingScreen />;
 
     return (
@@ -97,7 +119,7 @@ function Main() {
                 </section>
                 <div className="divider divider--home"></div>
                 <section className="topThree">
-                    {albums.slice(0, 3).map((album, index) => (
+                    {heroAlbums.map(album => (
                         <Album
                             key={album.id}
                             type={null}
@@ -105,7 +127,7 @@ function Main() {
                             artist={album.artist}
                             image={album.image_url}
                             id={album.id}
-                            rank={index + 1}
+                            rank={album.rank}
                         />
                     ))}
                 </section>
@@ -116,7 +138,7 @@ function Main() {
                     </button>
                 </section>
             </main>
-            <section className="stillFresh" ref={stillFreshRef}>
+            <section className="stillFresh" id="stillFresh" ref={stillFreshRef}>
                 <section className="topBar">
                     <button className="backArrow" onClick={() => scrollToSection(whoseDebutRef)}>
                         <img src="/images/Arrow.svg" alt="" className="arrowImage" />
@@ -125,7 +147,7 @@ function Main() {
                 </section>
                 <div className="divider"></div>
                 <section className="stillFreshAlbums">
-                    {albums.slice(3, 13).map((album, index) => (
+                    {stillFreshPool.map(album => (
                         <Album
                             key={album.id}
                             type='stillFresh'
@@ -133,7 +155,7 @@ function Main() {
                             artist={album.artist}
                             image={album.image_url}
                             id={album.id}
-                            rank={index + 4}
+                            rank={album.rank}
                         />
                     ))}
                 </section>
@@ -144,7 +166,7 @@ function Main() {
                     </button>
                 </section>
             </section>
-            <section className="archRef" ref={archiveRef}>
+            <section className="archRef" id="archive" ref={archiveRef}>
                 <Archive />
             </section>
             <Footer />

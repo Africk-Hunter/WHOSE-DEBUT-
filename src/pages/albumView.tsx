@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { pullAlbumInfoByID } from '../utilities/localStorageHandling';
+import { useNavigate, Link } from 'react-router-dom';
+import { pullAlbumInfoByID, getParsedGenres } from '../utilities/localStorageHandling';
+import { formatReviewText } from '../utilities/textFormatting';
+import { albumGenres } from '../utilities/genres';
 import LoadingScreen from '../components/LoadingScreen';
 
 const services = [
@@ -25,6 +27,10 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
 
     if (!album) return <LoadingScreen />;
 
+    const genreLabels: Record<string, string> = Object.fromEntries(
+        getParsedGenres().map((g: { slug: string; label: string }) => [g.slug, g.label])
+    );
+
     return (
         <main className="albumView">
             <div className="albumTopRow">
@@ -40,8 +46,10 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                             <h2 className="albumArtistView">{album.artist}</h2>
                         </div>
                         <ul className="genres">
-                            {String(album.genres ?? '').split(',').map(g => g.trim()).filter(Boolean).map(g => (
-                                <li key={g}>{g}</li>
+                            {albumGenres(album).map(slug => (
+                                <li key={slug}>
+                                    <Link to={`/?genre=${slug}#archive`}>{genreLabels[slug] ?? slug}</Link>
+                                </li>
                             ))}
                         </ul>
                     </div>
@@ -59,12 +67,12 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
             <section className="albumReviews">
                 <div className="artistPitch">
                     <h2 className="label">Artist's Pitch:</h2>
-                    <p className="review">{album.artist_review}</p>
+                    <p className="review" dangerouslySetInnerHTML={{ __html: formatReviewText(album.artist_review ?? '') }} />
                 </div>
                 {album.from_a_peer && (
                     <div className="peerReivew">
                         <h2 className="label">From a Peer:</h2>
-                        <p className="review">{album.from_a_peer}</p>
+                        <p className="review" dangerouslySetInnerHTML={{ __html: formatReviewText(album.from_a_peer) }} />
                     </div>
                 )}
             </section>

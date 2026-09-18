@@ -1,12 +1,14 @@
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { db } from './firebaseClient';
 import { addAlbumToLocalStorage } from '../localStorageHandling';
+import { GenreSlug, SEED_GENRES } from '../genres';
+import { getOrCreateGenre } from './genreInteractions';
 
 interface AlbumData {
     title: string;
     artist: string;
     releaseDate: string;
-    genre: string;
+    genres: GenreSlug[];
     description: string;
     fromapeer: string;
     spotify: string;
@@ -58,7 +60,7 @@ async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string): Pr
             year_released: albumData.releaseDate,
             artist_review: albumData.description,
             from_a_peer: albumData.fromapeer,
-            genres: albumData.genre,
+            genres: albumData.genres,
             spotify: albumData.spotify,
             apple: albumData.apple,
             bandcamp: albumData.bandcamp,
@@ -88,8 +90,6 @@ async function seedTestAlbums(): Promise<void> {
         'Wide Open', 'First Steps', 'Into the Basin', 'Hello, Reno', 'Uncharted'
     ];
 
-    const genres = ['Indie Folk', 'Desert Rock', 'Americana', 'Blues', 'Jazz', 'Alt-Country', 'Indie Pop', 'Soul'];
-
     const artistReviews = [
         'This album came out of two years of playing local venues and finally deciding it was time to capture what we do live. Every track was recorded in one or two takes — we wanted that raw energy.',
         'We wrote these songs during a weird stretch of time when everything felt uncertain. Putting them to tape felt like the only way to make sense of it all.',
@@ -113,13 +113,16 @@ async function seedTestAlbums(): Promise<void> {
         const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
         const year = baseYear + Math.floor(Math.random() * 5);
 
+        const seedGenre = SEED_GENRES[Math.floor(Math.random() * SEED_GENRES.length)];
+        const genre = await getOrCreateGenre(seedGenre.label);
+
         await addDoc(collection(db, 'albums'), {
             name: albumTitles[i],
             artist: artists[i],
             year_released: `${year}-${month}-${day}`,
             artist_review: artistReviews[i % artistReviews.length],
             from_a_peer: peerReviews[i % peerReviews.length],
-            genres: genres[Math.floor(Math.random() * genres.length)],
+            genres: [genre.slug],
             spotify: '',
             apple: '',
             bandcamp: '',

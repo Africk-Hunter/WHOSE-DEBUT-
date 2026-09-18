@@ -7,6 +7,7 @@
 @use './stillFresh';
 @use './about';
 @use './Contact';
+@use './genreFilter';
 @use './base';
 // Must be the literal last @use in this file — Sass emits each used module's
 // CSS in load order, and base's unconditional rules would otherwise win

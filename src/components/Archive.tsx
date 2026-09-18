@@ -1,135 +1,180 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ArchiveEntry from './ArchiveEntry';
-import { getParsedLocalStorage } from '../utilities/localStorageHandling';
+import { getParsedLocalStorage, getParsedGenres } from '../utilities/localStorageHandling';
+import { albumGenres, computeAvailableGenres, GenreSlug } from '../utilities/genres';
+import { Album } from '../utilities/types';
+import { useGenreFilter } from '../hooks/useGenreFilter';
+import GenreFilterBar from './GenreFilterBar';
 
-interface ArchiveProps { }
+const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+];
 
+function getYear(album: Album): string {
+    return album.year_released.slice(0, 4);
+}
 
-const Archive: React.FC<ArchiveProps> = ({ }) => {
+function getMonthIndex(album: Album): number {
+    return parseInt(album.year_released.slice(5, 7), 10) - 1;
+}
+
+interface MonthBucket {
+    month: string;
+    all: Album[];
+    matched: Album[];
+}
+
+interface YearBucket {
+    year: string;
+    months: MonthBucket[];
+    total: number;
+    matched: number;
+}
+
+// Groups an already rank-14+ pool into year -> month buckets, with a
+// match count against the current genre selection. Year rows always keep
+// their full "total" so a year never disappears under a filter; a month
+// keeps its `all` list too so an empty-match month can still report it once
+// had albums, rather than being indistinguishable from a month that never
+// existed.
+function buildBuckets(pool: Album[], selected: GenreSlug[]): YearBucket[] {
+    const active = selected.length > 0;
+    const isMatch = (a: Album) => !active || albumGenres(a).some(g => selected.includes(g));
+
+    const years = new Map<string, Album[]>();
+    for (const album of pool) {
+        const y = getYear(album);
+        if (!years.has(y)) years.set(y, []);
+        years.get(y)!.push(album);
+    }
+
+    const sortedYears = Array.from(years.keys()).sort((a, b) => Number(b) - Number(a));
+
+    return sortedYears.map(year => {
+        const yearAlbums = years.get(year)!;
+        const monthsMap = new Map<number, Album[]>();
+        for (const album of yearAlbums) {
+            const mi = getMonthIndex(album);
+            if (!monthsMap.has(mi)) monthsMap.set(mi, []);
+            monthsMap.get(mi)!.push(album);
+        }
+
+        const months: MonthBucket[] = Array.from(monthsMap.keys())
+            .sort((a, b) => b - a)
+            .map(mi => {
+                const all = monthsMap.get(mi)!;
+                return { month: MONTH_NAMES[mi], all, matched: all.filter(isMatch) };
+            });
+
+        return {
+            year,
+            months,
+            total: yearAlbums.length,
+            matched: yearAlbums.filter(isMatch).length,
+        };
+    });
+}
+
+const Archive: React.FC = () => {
     const navigate = useNavigate();
-    const [albums, setAlbums] = useState<any[]>([]);
-    const [albumYears] = useState<Number[]>([])
-
-    const month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const [albums, setAlbums] = useState<Album[]>([]);
+    const [genreLabels, setGenreLabels] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        const init = () => {
-            const parsed = getParsedLocalStorage()
-            setAlbums(parsed || []);
-            console.log("parsed albums: ", parsed);
-            findYearsOfAllAlbums(parsed);
-        };
-        init();
+        setAlbums(getParsedLocalStorage() || []);
+        setGenreLabels(
+            Object.fromEntries(getParsedGenres().map((g: { slug: string; label: string }) => [g.slug, g.label]))
+        );
+    }, []);
 
-    }, [])
+    const { selected, toggle, clear, commit, active } = useGenreFilter();
 
-    function getAlbumYear(album: any) {
-        const year = album.year_released.slice(0, 4)
-        return year;
+    // Every album, including ranks 1-13 (Hero/Still Fresh) — the Archive is
+    // the full catalog, not just the overflow. `albums` is already
+    // newest-first (sortAlbumsByReleaseDate runs before Main ever renders
+    // Archive).
+    const archivePool = useMemo(() => albums, [albums]);
+
+    const buckets = useMemo(() => buildBuckets(archivePool, selected), [archivePool, selected]);
+
+    const availableGenres = useMemo(
+        () => computeAvailableGenres(archivePool, genreLabels, selected),
+        [archivePool, genreLabels, selected]
+    );
+
+    const countForSelection = (slugs: GenreSlug[]) =>
+        slugs.length === 0
+            ? archivePool.length
+            : archivePool.filter(a => albumGenres(a).some(g => slugs.includes(g))).length;
+
+    const matchedTotal = countForSelection(selected);
+
+    const emptyLabel = selected.length === 1
+        ? `No ${genreLabels[selected[0]] ?? selected[0]} debuts`
+        : 'No matching debuts';
+
+    function viewAlbum(id: string) {
+        localStorage.setItem('selectedID', id);
+        navigate(`/album/${id}`);
     }
 
-    function getAlbumMonth(album: any) {
-        const monthDate = parseInt(album.year_released.slice(5, 7))
-        const monthName = month[monthDate - 1]
-        return monthName;
-    }
-
-    function isYearBeingTracked(year: number) {
-        for (var i = 0; i < albumYears.length; i++) {
-            if (year == albumYears[i]) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    function findYearsOfAllAlbums(albums: any) {
-        for (var i = 0; i < albums.length; i++) {
-            const year = getAlbumYear(albums[i])
-            if (!isYearBeingTracked(year)) {
-                albumYears.push(year);
-            }
-        }
-        albumYears.sort((a, b) => Number(b) - Number(a))
-    }
-
-    function displayAlbums() {
-        const elements: JSX.Element[] = [];
-
-        // Loop through each year
-        for (var i = 0; i < albumYears.length; i++) {
-            var currentYear = albumYears[i];
-            var currentYearAlbums: any[] = []
-
-            // Loop through albums and collect those from current year
-            for (var j = 0; j < albums.length; j++) {
-                if (getAlbumYear(albums[j]) == currentYear) {
-                    currentYearAlbums.push(albums[j])
-                }
-            }
-
-            // Add year separator
-            const position = i === 0 ? 'start' : '';
-            elements.push(
-                <ArchiveEntry
-                    key={`year-${currentYear}`}
-                    type='year'
-                    month={String(currentYear)}
-                    position={position}
-                    albums={[]}
-                    count={currentYearAlbums.length}
-                />
-            );
-
-            // Loop through months
-            for (var monthIndex = 0; monthIndex < 12; monthIndex++) {
-                var albumsThisMonth = 0;
-                var displayAlbums: any[] = [];
-
-                // Loop through current year's albums
-                for (var k = 0; k < currentYearAlbums.length; k++) {
-                    if (getAlbumMonth(currentYearAlbums[k]) == month[monthIndex]) {
-                        displayAlbums.push(currentYearAlbums[k]);
-                        albumsThisMonth++;
-                    }
-                }
-
-                // If albums exist for this month, render them
-                if (albumsThisMonth > 0) {
-                    elements.push(
-                        <ArchiveEntry
-                            key={`${currentYear}-${month[monthIndex]}`}
-                            type='month'
-                            month={month[monthIndex]}
-                            position=''
-                            albums={displayAlbums}
-                        />
-                    );
-                }
-            }
-        }
-
+    const elements: React.ReactElement[] = [];
+    buckets.forEach((yearBucket, yi) => {
         elements.push(
-            <ArchiveEntry key="end" type='year' month='' position='end' albums={[]} />
+            <ArchiveEntry
+                key={`year-${yearBucket.year}`}
+                kind="year"
+                label={yearBucket.year}
+                position={yi === 0 ? 'start' : ''}
+                matched={yearBucket.matched}
+                total={yearBucket.total}
+            />
         );
 
-        return elements;
-    }
+        yearBucket.months.forEach(m => {
+            const monthEmpty = active && m.matched.length === 0;
+            elements.push(
+                <ArchiveEntry
+                    key={`${yearBucket.year}-${m.month}`}
+                    kind="month"
+                    label={m.month}
+                    albums={active ? m.matched : m.all}
+                    empty={monthEmpty}
+                    emptyLabel={emptyLabel}
+                    onSelectAlbum={viewAlbum}
+                />
+            );
+        });
+    });
+
+    elements.push(<ArchiveEntry key="end" kind="year" label="" position="end" />);
 
     return (
-        <section className="archive" >
+        <section className="archive">
             <section className="topBar">
                 <button className="backArrow" onClick={() => navigate('/')}><img src="/images/Arrow.svg" alt="" className="arrowImage" /></button>
                 <h1 className="pageHeader pageHeader--section">THE ARCHIVE</h1>
             </section>
             <div className="divider"></div>
 
-            <section className="gridHolder">
-                {displayAlbums()}
-            </section>
+            <GenreFilterBar
+                available={availableGenres}
+                labels={genreLabels}
+                selected={selected}
+                toggle={toggle}
+                clear={clear}
+                commit={commit}
+                active={active}
+                resultCount={matchedTotal}
+                resultNoun="debuts"
+                countForSelection={countForSelection}
+            />
 
+            <section className="gridHolder">
+                {elements}
+            </section>
         </section>
     );
 };

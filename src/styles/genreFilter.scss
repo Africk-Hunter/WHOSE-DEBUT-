@@ -1,0 +1,346 @@
+@use './variables' as *;
+
+$gf-placeholder: #9A9086;
+
+.genreFilterBar {
+    position: relative;
+    width: 100%;
+}
+
+// Matches .gridHolder exactly (archive.scss).
+.archive .genreFilterBar {
+    width: 90%;
+    max-width: 1200px;
+}
+
+.genreFilterRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 2.5rem 0;
+}
+
+.genreFilterButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: $ink;
+    border: 3px solid $ink;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: $transition;
+
+    &.genreFilterButton--active {
+        background: $ink;
+        color: $background-color;
+
+        .genreFilterIcon {
+            border-color: $background-color;
+
+            &::after {
+                background: $background-color;
+            }
+        }
+    }
+}
+
+.genreFilterIcon {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    border: 2px solid $ink;
+    transition: $transition;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        background: $ink;
+        transform: scale(0);
+        transition: $transition;
+    }
+}
+
+.genreFilterButton--active .genreFilterIcon::after {
+    transform: scale(1);
+}
+
+.genreFilterButtonCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.3rem;
+    background: $background-color;
+    color: $ink;
+    font-size: 0.65rem;
+}
+
+.genreChip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 40px;
+    padding: 0.4rem 0.9rem;
+    background: transparent;
+    color: $ink;
+    border: 3px solid $ink;
+    border-radius: 0;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: $transition;
+
+    .genreChipCount,
+    .genreChipRemove {
+        opacity: 0.7;
+    }
+
+    &.genreChip--active {
+        background: $ink;
+        color: $background-color;
+        border-color: $ink;
+
+        .genreChipCount,
+        .genreChipRemove {
+            opacity: 1;
+        }
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            background: rgba($ink, 0.1);
+        }
+
+        &.genreChip--active:hover {
+            opacity: 0.85;
+        }
+    }
+}
+
+.genreClearAll {
+    background: none;
+    border: none;
+    padding: 0;
+    color: $ink;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.genreResultCount {
+    margin-left: auto;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: $ink;
+}
+
+.genreEmptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin: auto 0;
+    padding: 3rem 1rem;
+    color: $ink;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.85rem;
+    text-align: center;
+
+    button {
+        background: none;
+        border: none;
+        color: $ink;
+        text-decoration: underline;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: inherit;
+    }
+}
+
+.genreFilterScrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 17, 17, 0.34);
+    z-index: 40;
+}
+
+.genreFilterPanel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 50;
+    width: 560px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: $background-color;
+    border: 3px solid $ink;
+    box-shadow: 0 22px 44px rgba(0, 0, 0, 0.24);
+}
+
+.genreFilterPanelHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    h2 {
+        margin: 0;
+        font-family: 'Do Hyeon', sans-serif;
+        font-size: 1.6rem;
+    }
+}
+
+.genreFilterPanelSelectedCount {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $muted;
+}
+
+.genreFilterSearch {
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 0.75rem;
+    background: $background-color;
+    color: $ink;
+    border: 2px solid $ink;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    &::placeholder {
+        color: $gf-placeholder;
+    }
+
+    &:focus {
+        outline: none;
+        border-color: $ink;
+    }
+}
+
+.genreFilterList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.genreFilterPanelFooter {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 2px solid $ink;
+}
+
+.genreFilterClearButton {
+    padding: 0.6rem 1.2rem;
+    background: transparent;
+    color: $ink;
+    border: 3px solid $ink;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+}
+
+.genreFilterCommitButton {
+    flex: 1;
+    padding: 0.6rem 1.2rem;
+    background: $ink;
+    color: $background-color;
+    border: none;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+}
+
+.genreFilterButton:focus-visible,
+.genreChip:focus-visible,
+.genreClearAll:focus-visible,
+.genreFilterClearButton:focus-visible,
+.genreFilterCommitButton:focus-visible,
+.genreFilterSearch:focus-visible {
+    outline: 3px solid $ink;
+    outline-offset: 2px;
+}
+
+@keyframes genreFilterSlideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    // Below 768px, mobile.scss switches the grid itself to full-bleed —
+    // match that here instead of the fixed pixel max-widths used above 768px.
+    .genreFilterBar {
+        max-width: none;
+        width: 100%;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .genreFilterRow {
+        padding: 2.5rem 0 1.5rem 0;
+    }
+
+    .genreFilterPanel {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: none;
+        max-height: 80vh;
+        overflow-y: auto;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        box-shadow: none;
+        animation: genreFilterSlideUp 0.18s ease-out;
+    }
+
+    .genreFilterScrim {
+        background: rgba(17, 17, 17, 0.42);
+    }
+
+    .genreResultCount {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .genreFilterPanel {
+            animation: none;
+        }
+    }
+}
