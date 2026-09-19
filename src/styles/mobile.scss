@@ -40,11 +40,20 @@ $mb-gutter: 20px;
     padding: 22px $mb-gutter 0 $mb-gutter;
   }
 
+  .topBar--home {
+    grid-template-columns: 1fr;
+  }
+
   .pageHeader {
-    font-size: clamp(1.5rem, 7vw, 2.5rem);   // shrinks on narrow phones so it never wraps
+    font-size: 3rem;   // shrinks on narrow phones so it never wraps
     line-height: .95;
     text-align: center;
     white-space: nowrap;
+  }
+
+  .tagline {
+    font-size: clamp(0.75rem, 3vw, 1rem);
+    margin-top: 0.25rem;
   }
 
   .backArrow {
@@ -154,7 +163,7 @@ $mb-gutter: 20px;
     // stillFresh.scss's `.stillFresh .pageHeader { font-size: 5rem }` (two
     // classes) otherwise outranks the shared `.pageHeader` rule above (one
     // class) regardless of source order — keep it matching WHOSE DEBUT?'s size.
-    .pageHeader { font-size: clamp(1.5rem, 7vw, 2.5rem); }
+    .pageHeader { font-size: 2rem }
     .divider { display: block; }
   }
 

@@ -114,7 +114,12 @@ export function computeWaveformPeaks(decoded: AudioBuffer, numBuckets: number): 
     return peaks;
 }
 
-export async function trimAudioToWav(file: File, maxSeconds = 30, startSeconds = 0): Promise<Blob> {
-    const decoded = await decodeAudioFile(file);
+export async function trimAudioToWav(
+    file: File,
+    maxSeconds = 30,
+    startSeconds = 0,
+    preDecoded?: AudioBuffer
+): Promise<Blob> {
+    const decoded = preDecoded ?? (await decodeAudioFile(file));
     return sliceAudioBufferToWav(decoded, startSeconds, maxSeconds);
 }

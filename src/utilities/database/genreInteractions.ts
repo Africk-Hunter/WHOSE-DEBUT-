@@ -11,13 +11,15 @@ async function fetchAllGenres(): Promise<GenreEntry[]> {
 }
 
 // Seeds the `genres` collection from a starter list, but only the first time
-// it's empty — safe to call on every admin-dashboard mount.
-async function seedGenresIfEmpty(seed: GenreEntry[]): Promise<void> {
+// it's empty — safe to call on every admin-dashboard mount. Returns the
+// resulting genre list so callers don't need a second fetch to get it.
+async function seedGenresIfEmpty(seed: GenreEntry[]): Promise<GenreEntry[]> {
     const existing = await fetchAllGenres();
-    if (existing.length > 0) return;
+    if (existing.length > 0) return existing;
     for (const entry of seed) {
         await setDoc(doc(db, 'genres', entry.slug), { label: entry.label });
     }
+    return seed;
 }
 
 // Normalizes a typed label, reuses an existing genre if one already matches

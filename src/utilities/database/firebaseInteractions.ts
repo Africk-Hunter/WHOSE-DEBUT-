@@ -18,19 +18,18 @@ interface AlbumData {
     previewSongName: string;
 }
 
+async function fetchAllAlbumsFromFirebase(): Promise<Album[]> {
+    const snapshot = await getDocs(collection(db, 'albums'));
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Album));
+}
+
 async function loadAlbumsFromDatabase() {
     try {
-        const snapshot = await getDocs(collection(db, 'albums'));
-        const albums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const albums = await fetchAllAlbumsFromFirebase();
         localStorage.setItem('albums', JSON.stringify(albums));
     } catch (error) {
         console.error('Error loading albums from Firestore:', error);
     }
-}
-
-async function fetchAllAlbumsFromFirebase(): Promise<Album[]> {
-    const snapshot = await getDocs(collection(db, 'albums'));
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Album));
 }
 
 async function uploadCoverToCloudinary(fileName: string, imageFile: File): Promise<string> {
@@ -110,6 +109,28 @@ async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string, pre
     }
 }
 
+// Single source of truth for the fields an album edit writes to Firestore,
+// shared with the admin UI so it can merge the same shape into local state
+// instead of re-fetching after every save.
+function buildAlbumUpdatePayload(albumData: AlbumData, imageUrl?: string, previewAudioUrl?: string): Record<string, unknown> {
+    const updates: Record<string, unknown> = {
+        name: albumData.title,
+        artist: albumData.artist,
+        year_released: albumData.releaseDate,
+        artist_review: albumData.description,
+        from_a_peer: albumData.fromafan,
+        genres: albumData.genres,
+        spotify: albumData.spotify,
+        apple: albumData.apple,
+        bandcamp: albumData.bandcamp,
+        amazon: albumData.amazon,
+    };
+    if (imageUrl) updates.image_url = imageUrl;
+    if (previewAudioUrl) updates.preview_audio_url = previewAudioUrl;
+    if (previewAudioUrl || albumData.previewSongName) updates.preview_song_name = albumData.previewSongName;
+    return updates;
+}
+
 async function updateAlbumInFirebase(
     albumId: string,
     albumData: AlbumData,
@@ -117,21 +138,7 @@ async function updateAlbumInFirebase(
     previewAudioUrl?: string
 ): Promise<boolean> {
     try {
-        const updates: Record<string, unknown> = {
-            name: albumData.title,
-            artist: albumData.artist,
-            year_released: albumData.releaseDate,
-            artist_review: albumData.description,
-            from_a_peer: albumData.fromafan,
-            genres: albumData.genres,
-            spotify: albumData.spotify,
-            apple: albumData.apple,
-            bandcamp: albumData.bandcamp,
-            amazon: albumData.amazon,
-        };
-        if (imageUrl) updates.image_url = imageUrl;
-        if (previewAudioUrl) updates.preview_audio_url = previewAudioUrl;
-        if (previewAudioUrl || albumData.previewSongName) updates.preview_song_name = albumData.previewSongName;
+        const updates = buildAlbumUpdatePayload(albumData, imageUrl, previewAudioUrl);
         await updateDoc(doc(db, 'albums', albumId), updates);
         return true;
     } catch (error) {
@@ -229,4 +236,5 @@ export {
     deleteAlbumFromFirebase,
     updateAlbumComments,
     seedTestAlbums,
+    buildAlbumUpdatePayload,
 };

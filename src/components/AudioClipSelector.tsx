@@ -7,6 +7,7 @@ interface AudioClipSelectorProps {
     startSeconds: number;
     onStartSecondsChange: (seconds: number) => void;
     onError?: (message: string) => void;
+    onDecoded?: (buffer: AudioBuffer) => void;
 }
 
 const NUM_BUCKETS = 400;
@@ -45,6 +46,7 @@ const AudioClipSelector: React.FC<AudioClipSelectorProps> = ({
     startSeconds,
     onStartSecondsChange,
     onError,
+    onDecoded,
 }) => {
     const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
     const [duration, setDuration] = useState(0);
@@ -72,6 +74,7 @@ const AudioClipSelector: React.FC<AudioClipSelectorProps> = ({
                 setDuration(decoded.duration);
                 setPeaks(computeWaveformPeaks(decoded, NUM_BUCKETS));
                 setStatus('ready');
+                onDecoded?.(decoded);
             })
             .catch(err => {
                 if (cancelled) return;

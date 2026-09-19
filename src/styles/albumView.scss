@@ -65,6 +65,10 @@
     text-decoration: underline;
     color: $muted;
 
+    @media (min-width: 769px) {
+        margin-top: 0.5rem;
+    }
+
     &:visited { color: $muted; }
 }
 
@@ -321,6 +325,7 @@
         width: 3.25rem;    // 52px
         height: 3.25rem;
         border-radius: 50%;
+        border: 2px solid #000;
         object-fit: cover;
         transition: .2s all ease;
         &:hover { transform: scale(1.12); }

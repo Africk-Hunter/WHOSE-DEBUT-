@@ -113,10 +113,10 @@ function Main() {
     return (
         <section className='all'>
             <main className="main" ref={whoseDebutRef}>
-                <section className="topBar">
-                    <button className="backArrow"><img src="/images/Arrow.svg" alt="" className="arrowImage" /></button>
+                <section className="topBar topBar--home">
                     <h1 className="pageHeader pageHeader--home">WHOSE DEBUT?</h1>
                 </section>
+                <p className="tagline">Reno, Nevada. Weekly releases fresh from local artists</p>
                 <div className="divider divider--home"></div>
                 <section className="topThree">
                     {heroAlbums.map(album => (

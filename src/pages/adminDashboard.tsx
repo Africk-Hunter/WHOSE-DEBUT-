@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../utilities/database/firebaseClient';
@@ -11,12 +11,14 @@ import {
     deleteAlbumFromFirebase,
     updateAlbumComments,
     seedTestAlbums,
+    buildAlbumUpdatePayload,
 } from '../utilities/database/firebaseInteractions';
 import { trimAudioToWav, AudioProcessingError } from '../utilities/audio/trimAudioToWav';
 import { fetchAllGenres, seedGenresIfEmpty, getOrCreateGenre } from '../utilities/database/genreInteractions';
 import { previewGenreMigration, runGenreMigration, MigrationReport } from '../utilities/database/migrateGenres';
 import { GenreEntry, SEED_GENRES, albumGenres } from '../utilities/genres';
 import { Album, FanComment } from '../utilities/types';
+import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 import LoadingScreen from '../components/LoadingScreen';
 import AudioClipSelector from '../components/AudioClipSelector';
 
@@ -66,6 +68,7 @@ interface AlbumFormFieldsProps {
     audioStartSeconds: number;
     onAudioStartSecondsChange: (seconds: number) => void;
     onAudioError: (message: string) => void;
+    onAudioDecoded: (buffer: AudioBuffer) => void;
     existingAudioUrl?: string;
     isProcessingAudio: boolean;
 }
@@ -86,6 +89,7 @@ const AlbumFormFields: React.FC<AlbumFormFieldsProps> = ({
     audioStartSeconds,
     onAudioStartSecondsChange,
     onAudioError,
+    onAudioDecoded,
     existingAudioUrl,
     isProcessingAudio,
 }) => (
@@ -140,7 +144,11 @@ const AlbumFormFields: React.FC<AlbumFormFieldsProps> = ({
                 <label htmlFor="imageFile">Album Cover Image</label>
                 <input type="file" id="imageFile" name="imageFile" accept="image/*" onChange={onFileChange} />
                 {(imagePreviewUrl || existingImageUrl) && (
-                    <img src={imagePreviewUrl || existingImageUrl} alt="Cover preview" className="coverPreview" />
+                    <img
+                        src={imagePreviewUrl || optimizeCloudinaryUrl(existingImageUrl ?? '', 320)}
+                        alt="Cover preview"
+                        className="coverPreview"
+                    />
                 )}
             </div>
             <div className="formGroup">
@@ -156,6 +164,7 @@ const AlbumFormFields: React.FC<AlbumFormFieldsProps> = ({
                         startSeconds={audioStartSeconds}
                         onStartSecondsChange={onAudioStartSecondsChange}
                         onError={onAudioError}
+                        onDecoded={onAudioDecoded}
                     />
                 ) : existingAudioUrl ? (
                     <audio src={existingAudioUrl} controls className="audioPreview" />
@@ -242,10 +251,12 @@ const AdminDashboard: React.FC = () => {
     const [audioStartSeconds, setAudioStartSeconds] = useState(0);
     const [isProcessingAudio, setIsProcessingAudio] = useState(false);
     const [newGenreLabel, setNewGenreLabel] = useState('');
+    const decodedAudioBufferRef = useRef<AudioBuffer | null>(null);
 
     // --- Manage Albums tab state ---
     const [albums, setAlbums] = useState<Album[]>([]);
     const [albumsLoading, setAlbumsLoading] = useState(false);
+    const [albumsLoaded, setAlbumsLoaded] = useState(false);
     const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
     const [editFormData, setEditFormData] = useState<AlbumFormData>(emptyAlbumForm);
     const [editImageFile, setEditImageFile] = useState<File | null>(null);
@@ -255,6 +266,7 @@ const AdminDashboard: React.FC = () => {
     const [editIsProcessingAudio, setEditIsProcessingAudio] = useState(false);
     const [editNewGenreLabel, setEditNewGenreLabel] = useState('');
     const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const editDecodedAudioBufferRef = useRef<AudioBuffer | null>(null);
 
     const [availableGenres, setAvailableGenres] = useState<GenreEntry[]>([]);
 
@@ -270,24 +282,27 @@ const AdminDashboard: React.FC = () => {
     useEffect(() => {
         if (!authChecked) return;
         const initGenres = async () => {
-            await seedGenresIfEmpty(SEED_GENRES);
-            setAvailableGenres(await fetchAllGenres());
+            setAvailableGenres(await seedGenresIfEmpty(SEED_GENRES));
         };
         initGenres();
     }, [authChecked]);
 
+    const sortAlbumsByReleaseDate = (list: Album[]) =>
+        [...list].sort((a, b) => new Date(b.year_released).getTime() - new Date(a.year_released).getTime());
+
     const loadAlbumsList = async () => {
         setAlbumsLoading(true);
         const fetched = await fetchAllAlbumsFromFirebase();
-        fetched.sort((a, b) => new Date(b.year_released).getTime() - new Date(a.year_released).getTime());
-        setAlbums(fetched);
+        setAlbums(sortAlbumsByReleaseDate(fetched));
         setAlbumsLoading(false);
+        setAlbumsLoaded(true);
     };
 
     useEffect(() => {
-        if (!authChecked || (activeTab !== 'manage' && activeTab !== 'comments')) return;
+        if (!authChecked || albumsLoaded || (activeTab !== 'manage' && activeTab !== 'comments')) return;
         loadAlbumsList();
-    }, [authChecked, activeTab]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authChecked, activeTab, albumsLoaded]);
 
     useEffect(() => {
         if (!imageFile) {
@@ -324,6 +339,7 @@ const AdminDashboard: React.FC = () => {
         if (e.target.files && e.target.files[0]) {
             setAudioFile(e.target.files[0]);
             setAudioStartSeconds(0);
+            decodedAudioBufferRef.current = null;
         }
     };
 
@@ -372,6 +388,7 @@ const AdminDashboard: React.FC = () => {
         if (e.target.files && e.target.files[0]) {
             setEditAudioFile(e.target.files[0]);
             setEditAudioStartSeconds(0);
+            editDecodedAudioBufferRef.current = null;
         }
     };
 
@@ -452,7 +469,12 @@ const AdminDashboard: React.FC = () => {
         if (editAudioFile) {
             setEditIsProcessingAudio(true);
             try {
-                const trimmedWav = await trimAudioToWav(editAudioFile, 30, editAudioStartSeconds);
+                const trimmedWav = await trimAudioToWav(
+                    editAudioFile,
+                    30,
+                    editAudioStartSeconds,
+                    editDecodedAudioBufferRef.current ?? undefined
+                );
                 const audioFileName = `${editFormData.artist.replace(/\s+/g, '_')}-${editFormData.title.replace(/\s+/g, '_')}-${Date.now()}-preview.wav`;
                 previewAudioUrl = await uploadPreviewAudioToCloudinary(audioFileName, trimmedWav);
             } catch (error) {
@@ -474,8 +496,11 @@ const AdminDashboard: React.FC = () => {
 
         if (success) {
             alert('Album updated successfully');
+            const updates = buildAlbumUpdatePayload(editFormData, imageUrl || undefined, previewAudioUrl || undefined);
+            setAlbums(prev =>
+                sortAlbumsByReleaseDate(prev.map(a => (a.id === editingAlbum.id ? { ...a, ...updates } : a)))
+            );
             cancelEditingAlbum();
-            await loadAlbumsList();
         }
     };
 
@@ -485,7 +510,7 @@ const AdminDashboard: React.FC = () => {
         const success = await deleteAlbumFromFirebase(album.id);
         if (success) {
             if (editingAlbum?.id === album.id) cancelEditingAlbum();
-            await loadAlbumsList();
+            setAlbums(prev => prev.filter(a => a.id !== album.id));
         }
     };
 
@@ -513,7 +538,7 @@ const AdminDashboard: React.FC = () => {
         if (success) {
             setNewCommentName('');
             setNewCommentText('');
-            await loadAlbumsList();
+            setAlbums(prev => prev.map(a => (a.id === commentsAlbum.id ? { ...a, comments: updatedComments } : a)));
         }
     };
 
@@ -525,7 +550,7 @@ const AdminDashboard: React.FC = () => {
         const updatedComments = (commentsAlbum.comments ?? []).filter(c => c.id !== commentId);
         const success = await updateAlbumComments(commentsAlbum.id, updatedComments);
         if (success) {
-            await loadAlbumsList();
+            setAlbums(prev => prev.map(a => (a.id === commentsAlbum.id ? { ...a, comments: updatedComments } : a)));
         }
     };
 
@@ -550,7 +575,12 @@ const AdminDashboard: React.FC = () => {
         if (audioFile) {
             setIsProcessingAudio(true);
             try {
-                const trimmedWav = await trimAudioToWav(audioFile, 30, audioStartSeconds);
+                const trimmedWav = await trimAudioToWav(
+                    audioFile,
+                    30,
+                    audioStartSeconds,
+                    decodedAudioBufferRef.current ?? undefined
+                );
                 const audioFileName = `${albumData.artist.replace(/\s+/g, '_')}-${albumData.title.replace(/\s+/g, '_')}-${Date.now()}-preview.wav`;
                 previewAudioUrl = await uploadPreviewAudioToCloudinary(audioFileName, trimmedWav);
             } catch (error) {
@@ -571,6 +601,9 @@ const AdminDashboard: React.FC = () => {
             setImageFile(null);
             setAudioFile(null);
             setAudioStartSeconds(0);
+            // Manage/Comments tabs cache the album list — invalidate it so the
+            // new album shows up next time either tab is opened.
+            setAlbumsLoaded(false);
         }
     };
 
@@ -658,6 +691,7 @@ const AdminDashboard: React.FC = () => {
                             audioStartSeconds={audioStartSeconds}
                             onAudioStartSecondsChange={setAudioStartSeconds}
                             onAudioError={(message) => alert(message)}
+                            onAudioDecoded={(buffer) => { decodedAudioBufferRef.current = buffer; }}
                             isProcessingAudio={isProcessingAudio}
                         />
                         <div className="submitRow">
@@ -689,6 +723,7 @@ const AdminDashboard: React.FC = () => {
                                     audioStartSeconds={editAudioStartSeconds}
                                     onAudioStartSecondsChange={setEditAudioStartSeconds}
                                     onAudioError={(message) => alert(message)}
+                                    onAudioDecoded={(buffer) => { editDecodedAudioBufferRef.current = buffer; }}
                                     existingAudioUrl={editingAlbum.preview_audio_url}
                                     isProcessingAudio={editIsProcessingAudio}
                                 />
@@ -704,14 +739,19 @@ const AdminDashboard: React.FC = () => {
                         </>
                     ) : (
                         <>
-                            <h2>Manage Albums</h2>
+                            <div className="albumListHeader">
+                                <h2>Manage Albums</h2>
+                                <button type="button" className="adminButton" onClick={loadAlbumsList} disabled={albumsLoading}>
+                                    Refresh
+                                </button>
+                            </div>
                             {albumsLoading && <p className="formHint">Loading albums&hellip;</p>}
                             {!albumsLoading && albums.length === 0 && <p className="formHint">No albums found.</p>}
                             <ul className="albumList">
                                 {albums.map(album => (
                                     <li key={album.id} className="albumListItem">
                                         {album.image_url && (
-                                            <img src={album.image_url} alt="" className="albumListThumb" />
+                                            <img src={optimizeCloudinaryUrl(album.image_url, 120)} alt="" className="albumListThumb" />
                                         )}
                                         <div className="albumListInfo">
                                             <p className="albumListTitle">{album.name}</p>
