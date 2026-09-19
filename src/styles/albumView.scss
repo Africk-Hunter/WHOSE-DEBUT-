@@ -69,24 +69,140 @@
 }
 
 // Was `position: absolute; bottom/left` — pinned to the viewport regardless
-// of content height, which overlapped the fan note bar once that pushed the
-// page taller. Grouping it with the fan note card in one flex column and
-// letting .albumView's align-content push that whole group to the bottom
-// gets the same "anchored to the bottom" look without the overlap risk.
+// of content height. Kept as its own full-width row so .albumView's
+// align-content still pushes it to the bottom of the page.
 .albumBottomGroup {
     display: flex;
-    flex-direction: column;
 
+    // Flush with the album art's left edge, not the page's — the art sits
+    // to the right of `.back` (5rem) plus `.albumView`'s gap, but this row
+    // wraps onto its own line and would otherwise start at the page edge.
     @media (min-width: 769px) {
         flex: 1 1 100%;
-        flex-direction: row;
-        align-items: flex-end;     // bottom-align the CTA link with the fan note card
-        justify-content: space-between;
+        margin-left: 6.5rem;   // 5rem back button + 1.5rem base gap
+
+        @media (max-width: 1024px) { margin-left: 6rem; }      // + 1rem gap
+        @media (min-width: 1440px) { margin-left: 6.75rem; }   // + 1.75rem gap
+        @media (min-width: 1800px) { margin-left: 7rem; }      // + 2rem gap
     }
 }
 
 .listenLabel {
     display: none;
+}
+
+.previewAudio {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.previewAudioLabel {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $muted;
+}
+
+.audioPlayer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid $ink;
+    box-sizing: border-box;
+}
+
+.audioPlayerRow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.audioPlayerToggle {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: $ink;
+    cursor: pointer;
+    transition: $transition;
+
+    svg {
+        width: 0.8rem;
+        height: 0.8rem;
+        fill: $background-color;
+    }
+
+    &:hover { transform: scale(1.1); }
+    &:focus-visible { outline: 2px solid $ink; outline-offset: 2px; }
+}
+
+.audioPlayerVolumeRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.audioPlayerVolumeToggle {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+    transition: $transition;
+
+    svg {
+        width: 100%;
+        height: 100%;
+        fill: $ink;
+    }
+
+    .audioPlayerVolumeWave,
+    .audioPlayerVolumeMute line {
+        fill: none;
+        stroke: $ink;
+        stroke-width: 1.75;
+        stroke-linecap: round;
+    }
+
+    &:hover { transform: scale(1.15); }
+    &:focus-visible { outline: 2px solid $ink; outline-offset: 2px; }
+}
+
+.audioPlayerVolume {
+    flex: 1;
+    min-width: 0;
+    accent-color: $ink;
+    cursor: pointer;
+}
+
+.audioPlayerScrub {
+    flex: 1;
+    min-width: 0;
+    accent-color: $ink;
+    cursor: pointer;
+}
+
+.audioPlayerTime {
+    flex-shrink: 0;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: $muted;
+    white-space: nowrap;
 }
 
 .albumInfo {
@@ -241,6 +357,55 @@
     gap: 0.5rem;
 }
 
+.commentList {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.commentItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid $ink;
+}
+
+.commentText {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: $ink-soft;
+    white-space: pre-wrap;
+
+    @media (max-width: 1024px) { font-size: 1rem; }
+    @media (min-width: 1440px) { font-size: 1.2rem; }
+    @media (min-width: 1800px) { font-size: 1.35rem; }
+}
+
+.commentEmpty {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    font-style: italic;
+    color: $muted;
+    padding-left: 0.9rem;
+    border-left: 2px dashed $muted;
+
+    @media (max-width: 1024px) { font-size: 1rem; }
+    @media (min-width: 1440px) { font-size: 1.2rem; }
+    @media (min-width: 1800px) { font-size: 1.35rem; }
+}
+
+.commentAuthor {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $muted;
+}
+
 .label {
     font-size: 2.75rem;
 
@@ -248,6 +413,15 @@
     @media (max-width: 1024px) { font-size: 1.75rem; }
     @media (min-width: 1440px) { font-size: 3.1rem; }
     @media (min-width: 1800px) { font-size: 3.6rem; }
+}
+
+.fanReview .label {
+    font-size: 1.75rem;
+
+    @media (max-width: 1200px) { font-size: 1.375rem; }
+    @media (max-width: 1024px) { font-size: 1.125rem; }
+    @media (min-width: 1440px) { font-size: 1.95rem; }
+    @media (min-width: 1800px) { font-size: 2.25rem; }
 }
 
 .review {

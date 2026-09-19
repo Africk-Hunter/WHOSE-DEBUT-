@@ -81,6 +81,54 @@
         background: $ink;
         color: white;
     }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+
+        &:hover {
+            background: white;
+            color: $ink;
+        }
+    }
+
+    &--danger {
+        border-color: #B3413A;
+        color: #B3413A;
+
+        &:hover {
+            background: #B3413A;
+            color: white;
+        }
+    }
+}
+
+.adminTabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.adminTab {
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid #D8CFC4;
+    border-radius: 999px;
+    background: white;
+    color: $ink-soft;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover {
+        border-color: $ink;
+    }
+
+    &--active {
+        background: $ink;
+        color: white;
+        border-color: $ink;
+    }
 }
 
 .albumAdd {
@@ -185,9 +233,79 @@
     margin: -0.2rem 0 0;
 }
 
+.audioPreview {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.audioClipSelector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.audioClipSelectorWaveform {
+    position: relative;
+    width: 100%;
+    height: 80px;
+    background: $background-color;
+    border: 1px solid #D8CFC4;
+    border-radius: 6px;
+    overflow: hidden;
+    touch-action: none;
+
+    &--interactive {
+        cursor: pointer;
+    }
+}
+
+.audioClipSelectorCanvas {
+    position: absolute;
+    inset: 0;
+}
+
+.audioClipSelectorWindow {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.18);
+    border-left: 2px solid $ink;
+    border-right: 2px solid $ink;
+    cursor: grab;
+
+    &:active {
+        cursor: grabbing;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $ink;
+        outline-offset: -2px;
+    }
+}
+
+.audioClipSelectorTransport {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.audioClipSelectorSelectionRow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .adminButton {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
 .submitRow {
     display: flex;
     justify-content: flex-end;
+    gap: 1rem;
     padding-top: 0.5rem;
 }
 
@@ -238,10 +356,97 @@
     }
 }
 
+.albumList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.albumListItem {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border: 1px solid #E5DED6;
+    border-radius: 8px;
+}
+
+.albumListThumb {
+    width: 3.5rem;
+    height: 3.5rem;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.albumListInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.albumListTitle {
+    font-weight: 700;
+    margin: 0;
+}
+
+.albumListMeta {
+    font-size: 0.85rem;
+    color: $muted;
+    margin: 0.1rem 0 0;
+}
+
+.albumListActions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+
+    .adminButton {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+.commentList {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.commentListItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.75rem;
+    border: 1px solid #E5DED6;
+    border-radius: 8px;
+}
+
+.commentListInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.commentListName {
+    font-weight: 700;
+    margin: 0;
+}
+
+.commentListText {
+    font-size: 0.9rem;
+    color: $ink-soft;
+    margin: 0.25rem 0 0;
+    white-space: pre-wrap;
+}
+
 .genreMigration {
     width: 100%;
     max-width: 640px;
-    margin-top: 2rem;
     padding: 1.5rem 2rem;
     background: white;
     border-radius: 12px;

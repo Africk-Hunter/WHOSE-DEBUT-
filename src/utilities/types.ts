@@ -1,3 +1,9 @@
+export interface FanComment {
+    id: string;
+    name: string;
+    text: string;
+}
+
 export interface Album {
     id: string;
     name: string;
@@ -12,4 +18,7 @@ export interface Album {
     bandcamp: string;
     amazon: string;
     rank?: number;
+    preview_audio_url?: string;
+    preview_song_name?: string;
+    comments?: FanComment[];
 }

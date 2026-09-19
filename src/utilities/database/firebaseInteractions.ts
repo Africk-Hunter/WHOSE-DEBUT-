@@ -1,7 +1,8 @@
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebaseClient';
 import { GenreSlug, SEED_GENRES } from '../genres';
 import { getOrCreateGenre } from './genreInteractions';
+import { Album, FanComment } from '../types';
 
 interface AlbumData {
     title: string;
@@ -14,6 +15,7 @@ interface AlbumData {
     apple: string;
     amazon: string;
     bandcamp: string;
+    previewSongName: string;
 }
 
 async function loadAlbumsFromDatabase() {
@@ -24,6 +26,11 @@ async function loadAlbumsFromDatabase() {
     } catch (error) {
         console.error('Error loading albums from Firestore:', error);
     }
+}
+
+async function fetchAllAlbumsFromFirebase(): Promise<Album[]> {
+    const snapshot = await getDocs(collection(db, 'albums'));
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Album));
 }
 
 async function uploadCoverToCloudinary(fileName: string, imageFile: File): Promise<string> {
@@ -50,9 +57,33 @@ async function uploadCoverToCloudinary(fileName: string, imageFile: File): Promi
     return data.secure_url;
 }
 
-async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string): Promise<boolean> {
+async function uploadPreviewAudioToCloudinary(fileName: string, audioBlob: Blob): Promise<string> {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_AUDIO_UPLOAD_PRESET;
+
+    const formData = new FormData();
+    formData.append('file', audioBlob, fileName);
+    formData.append('upload_preset', uploadPreset);
+    formData.append('public_id', fileName);
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        alert('Failed to upload preview audio: ' + err.error?.message);
+        return '';
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+}
+
+async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string, previewAudioUrl?: string): Promise<boolean> {
     try {
-        await addDoc(collection(db, 'albums'), {
+        const albumDoc: Record<string, unknown> = {
             name: albumData.title,
             artist: albumData.artist,
             year_released: albumData.releaseDate,
@@ -64,12 +95,70 @@ async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string): Pr
             bandcamp: albumData.bandcamp,
             amazon: albumData.amazon,
             image_url: imageUrl,
-        });
+        };
+        if (previewAudioUrl) {
+            albumDoc.preview_audio_url = previewAudioUrl;
+            albumDoc.preview_song_name = albumData.previewSongName;
+        }
+        await addDoc(collection(db, 'albums'), albumDoc);
         alert('Album added successfully');
         return true;
     } catch (error) {
         console.error('Error adding album:', error);
         alert('Failed to add album: ' + error);
+        return false;
+    }
+}
+
+async function updateAlbumInFirebase(
+    albumId: string,
+    albumData: AlbumData,
+    imageUrl?: string,
+    previewAudioUrl?: string
+): Promise<boolean> {
+    try {
+        const updates: Record<string, unknown> = {
+            name: albumData.title,
+            artist: albumData.artist,
+            year_released: albumData.releaseDate,
+            artist_review: albumData.description,
+            from_a_peer: albumData.fromafan,
+            genres: albumData.genres,
+            spotify: albumData.spotify,
+            apple: albumData.apple,
+            bandcamp: albumData.bandcamp,
+            amazon: albumData.amazon,
+        };
+        if (imageUrl) updates.image_url = imageUrl;
+        if (previewAudioUrl) updates.preview_audio_url = previewAudioUrl;
+        if (previewAudioUrl || albumData.previewSongName) updates.preview_song_name = albumData.previewSongName;
+        await updateDoc(doc(db, 'albums', albumId), updates);
+        return true;
+    } catch (error) {
+        console.error('Error updating album:', error);
+        alert('Failed to update album: ' + error);
+        return false;
+    }
+}
+
+async function deleteAlbumFromFirebase(albumId: string): Promise<boolean> {
+    try {
+        await deleteDoc(doc(db, 'albums', albumId));
+        return true;
+    } catch (error) {
+        console.error('Error deleting album:', error);
+        alert('Failed to delete album: ' + error);
+        return false;
+    }
+}
+
+async function updateAlbumComments(albumId: string, comments: FanComment[]): Promise<boolean> {
+    try {
+        await updateDoc(doc(db, 'albums', albumId), { comments });
+        return true;
+    } catch (error) {
+        console.error('Error updating comments:', error);
+        alert('Failed to update comments: ' + error);
         return false;
     }
 }
@@ -130,4 +219,14 @@ async function seedTestAlbums(): Promise<void> {
     }
 }
 
-export { loadAlbumsFromDatabase, uploadCoverToCloudinary, submitAlbumToFirebase, seedTestAlbums };
+export {
+    loadAlbumsFromDatabase,
+    fetchAllAlbumsFromFirebase,
+    uploadCoverToCloudinary,
+    uploadPreviewAudioToCloudinary,
+    submitAlbumToFirebase,
+    updateAlbumInFirebase,
+    deleteAlbumFromFirebase,
+    updateAlbumComments,
+    seedTestAlbums,
+};

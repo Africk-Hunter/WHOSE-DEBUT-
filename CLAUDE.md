@@ -32,6 +32,7 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 VITE_CLOUDINARY_CLOUD_NAME=
 VITE_CLOUDINARY_UPLOAD_PRESET=
+VITE_CLOUDINARY_AUDIO_UPLOAD_PRESET=
 VITE_EMAILJS_SERVICE_ID=
 VITE_EMAILJS_TEMPLATE_ID=
 VITE_EMAILJS_FAN_NOTE_TEMPLATE_ID=
@@ -63,8 +64,11 @@ Album navigation uses a side-channel: clicking an album writes `selectedID` to `
 | `genres` | |
 | `spotify`, `apple`, `bandcamp`, `amazon` | Streaming links |
 | `image_url` | Public URL from Firebase Storage |
+| `preview_audio_url` | Optional. 30-second WAV preview clip, auto-trimmed client-side from admin upload |
 
 **Image hosting: Cloudinary** — album covers are uploaded via unsigned upload to Cloudinary. `public_id` follows the pattern `Artist_Name-Album_Title-{timestamp}`. The returned `secure_url` is stored as `image_url` in Firestore. Configure via `VITE_CLOUDINARY_CLOUD_NAME` and `VITE_CLOUDINARY_UPLOAD_PRESET` (preset must be set to "unsigned" in the Cloudinary dashboard).
+
+**Preview audio hosting: Cloudinary** — an optional album preview clip is decoded client-side with the Web Audio API, trimmed to the first 30 seconds, re-encoded as a WAV blob, and uploaded unsigned to Cloudinary's `/video/upload` endpoint (Cloudinary treats audio under the "video" resource type). Uses a **second, separate** unsigned preset via `VITE_CLOUDINARY_AUDIO_UPLOAD_PRESET` — this preset must be created manually in the Cloudinary dashboard (Settings → Upload → Add upload preset, set to unsigned) before the feature works; it cannot be created from code. The returned `secure_url` is stored as `preview_audio_url` and is only written to Firestore when a preview was actually uploaded.
 
 **Auth** — Firebase email/password. Admin user must be created manually in the Firebase Console under Authentication → Users.
 
@@ -93,6 +97,8 @@ All SCSS is imported through a single entry point: [src/styles/index.scss](src/s
 ### Key Utility Files
 
 - [src/utilities/database/firebaseClient.ts](src/utilities/database/firebaseClient.ts) — initializes Firebase app, exports `db`, `storage`, `auth`
-- [src/utilities/database/firebaseInteractions.ts](src/utilities/database/firebaseInteractions.ts) — `loadAlbumsFromDatabase`, `uploadCoverToCloudinary`, `submitAlbumToFirebase`
+- [src/utilities/database/firebaseInteractions.ts](src/utilities/database/firebaseInteractions.ts) — `loadAlbumsFromDatabase`, `uploadCoverToCloudinary`, `uploadPreviewAudioToCloudinary`, `submitAlbumToFirebase`
+- [src/utilities/audio/trimAudioToWav.ts](src/utilities/audio/trimAudioToWav.ts) — `decodeAudioFile` decodes an uploaded audio file via the Web Audio API; `sliceAudioBufferToWav` slices a decoded buffer from a given start offset for N seconds and re-encodes it as a WAV `Blob`; `computeWaveformPeaks` buckets a decoded buffer into peak amplitudes for waveform drawing; `trimAudioToWav` composes the first two for one-shot use
+- [src/components/AudioClipSelector.tsx](src/components/AudioClipSelector.tsx) — admin-only waveform UI (canvas, drawn from `computeWaveformPeaks`) for dragging a fixed-length preview window over an uploaded audio file before it's trimmed and uploaded
 - [src/utilities/localStorageHandling.ts](src/utilities/localStorageHandling.ts) — all localStorage read/write helpers
 - [src/utilities/types.ts](src/utilities/types.ts) — shared TypeScript types (currently `Album`)

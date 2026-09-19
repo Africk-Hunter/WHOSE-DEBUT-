@@ -6,6 +6,7 @@ interface FanNoteFormProps {
     albumId: string;
     albumName: string;
     artist: string;
+    compact?: boolean;
 }
 
 const EMPTY_DRAFT: FanNoteDraft = { name: '', email: '', body: '', displayName: true };
@@ -15,7 +16,7 @@ const EMPTY_DRAFT: FanNoteDraft = { name: '', email: '', body: '', displayName: 
 // Hunter via its own EmailJS template (VITE_EMAILJS_FAN_NOTE_TEMPLATE_ID),
 // on the same service as the About page's contact form. He reads it and
 // decides whether to fold it into the album's "From a Fan" field by hand.
-const FanNoteForm: React.FC<FanNoteFormProps> = ({ albumId, albumName, artist }) => {
+const FanNoteForm: React.FC<FanNoteFormProps> = ({ albumId, albumName, artist, compact }) => {
     const storageKey = `wd.fanNoteSent.${albumId}`;
 
     const [open, setOpen] = useState(false);
@@ -92,9 +93,11 @@ const FanNoteForm: React.FC<FanNoteFormProps> = ({ albumId, albumName, artist })
         }
     };
 
+    const className = `fanNoteCta${compact ? ' fanNoteCta--compact' : ''}`;
+
     if (sent) {
         return (
-            <div className="fanNoteCta fanNoteCta--sent">
+            <div className={`${className} fanNoteCta--sent`}>
                 <p className="fanNoteKicker">Thanks!</p>
                 <p>Your note is on its way. Hunter reads every submission personally.</p>
             </div>
@@ -102,7 +105,7 @@ const FanNoteForm: React.FC<FanNoteFormProps> = ({ albumId, albumName, artist })
     }
 
     return (
-        <div className="fanNoteCta">
+        <div className={className}>
             {!open ? (
                 <div className="fanNoteCtaResting">
                     <div className="fanNoteCtaText">

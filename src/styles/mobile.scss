@@ -41,9 +41,10 @@ $mb-gutter: 20px;
   }
 
   .pageHeader {
-    font-size: 2.5rem;   // 40px
+    font-size: clamp(1.5rem, 7vw, 2.5rem);   // shrinks on narrow phones so it never wraps
     line-height: .95;
     text-align: center;
+    white-space: nowrap;
   }
 
   .backArrow {
@@ -153,7 +154,7 @@ $mb-gutter: 20px;
     // stillFresh.scss's `.stillFresh .pageHeader { font-size: 5rem }` (two
     // classes) otherwise outranks the shared `.pageHeader` rule above (one
     // class) regardless of source order — keep it matching WHOSE DEBUT?'s size.
-    .pageHeader { font-size: 2.5rem; }
+    .pageHeader { font-size: clamp(1.5rem, 7vw, 2.5rem); }
     .divider { display: block; }
   }
 

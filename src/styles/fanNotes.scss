@@ -19,6 +19,24 @@ $fn-placeholder: #9A9086;
     &.fanNoteCta--sent {
         color: $ink-soft;
     }
+
+    &.fanNoteCta--compact {
+        margin-top: 0.5rem;
+        padding: 1rem;
+        max-width: none;
+
+        .fanNoteKicker { font-size: 0.7rem; }
+        .fanNoteCtaText p { font-size: 0.9rem; }
+
+        .fanNoteButton {
+            height: 40px;
+            padding: 0 1.1rem;
+            margin-top: 0.35rem;
+            font-size: 0.7rem;
+
+            @media (min-width: 769px) { margin-top: 0; }
+        }
+    }
 }
 
 .fanNoteCtaResting {

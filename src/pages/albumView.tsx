@@ -6,6 +6,7 @@ import { albumGenres } from '../utilities/genres';
 import LoadingScreen from '../components/LoadingScreen';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 import FanNoteForm from '../components/FanNoteForm';
+import PreviewAudioPlayer from '../components/PreviewAudioPlayer';
 
 function isSafeUrl(url: string): boolean {
     try {
@@ -62,6 +63,14 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                                 </li>
                             ))}
                         </ul>
+                        {album.preview_audio_url && (
+                            <div className="previewAudio">
+                                <span className="previewAudioLabel">
+                                    Preview{album.preview_song_name ? `: ${album.preview_song_name}` : ''}
+                                </span>
+                                <PreviewAudioPlayer src={album.preview_audio_url} />
+                            </div>
+                        )}
                     </div>
                     <span className="listenLabel">Listen</span>
                     <section className="links">
@@ -79,15 +88,24 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                     <h2 className="label">Artist's Pitch:</h2>
                     <p className="review" dangerouslySetInnerHTML={{ __html: formatReviewText(album.artist_review ?? '') }} />
                 </div>
-                {album.from_a_peer && (
-                    <div className="fanReview">
-                        <h2 className="label">From a Fan:</h2>
-                        <p className="review" dangerouslySetInnerHTML={{ __html: formatReviewText(album.from_a_peer) }} />
-                    </div>
-                )}
+                <div className="fanReview">
+                    <h2 className="label">Fan Notes:</h2>
+                    {album.comments && album.comments.length > 0 ? (
+                        <ul className="commentList">
+                            {album.comments.map((comment: { id: string; name: string; text: string }) => (
+                                <li key={comment.id} className="commentItem">
+                                    <p className="commentText" dangerouslySetInnerHTML={{ __html: formatReviewText(comment.text) }} />
+                                    <span className="commentAuthor">{comment.name}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="commentEmpty">No notes yet. Be the first to tell {album.artist} what you think!</p>
+                    )}
+                    <FanNoteForm albumId={album.id} albumName={album.name} artist={album.artist} compact />
+                </div>
             </section>
             <div className="albumBottomGroup">
-                <FanNoteForm albumId={album.id} albumName={album.name} artist={album.artist} />
                 <a href="/about" className="albumViewCTA">Are you releasing an album? Click here!</a>
             </div>
         </main>
