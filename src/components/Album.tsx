@@ -13,7 +13,7 @@ interface AlbumProps {
 }
 
 
-const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, rank, genre }) => {
+const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, genre }) => {
     const navigate = useNavigate();
 
     function viewAlbum() {
@@ -37,7 +37,6 @@ const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, rank, gen
             tabIndex={0}
         >
             <div className="albumImgHolder">
-                {rank != null && <span className="rankBadge">{String(rank).padStart(2, '0')}</span>}
                 {genre && <span className="genreBadge">{genre}</span>}
                 <img
                     src={optimizeCloudinaryUrl(image, type === 'stillFresh' ? 400 : 700)}

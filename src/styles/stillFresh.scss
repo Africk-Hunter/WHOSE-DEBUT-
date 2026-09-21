@@ -7,9 +7,19 @@
     scroll-snap-align: start;
 }
 
+.stillFresh .stickyHeader {
+    z-index: 20;
+}
+
+.stillFresh .divider {
+    @media (min-width: 1025px) {
+        height: 1.25rem;   // shorter than the shared 2rem divider
+    }
+}
+
 .stillFreshAlbums {
     display: grid;
-    grid-template-columns: repeat(5, 186px);
+    grid-template-columns: repeat(5, 166px);
     justify-content: center;
     column-gap: 44px;
     row-gap: 40px;

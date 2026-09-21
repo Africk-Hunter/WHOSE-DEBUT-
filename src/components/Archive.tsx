@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ArchiveEntry from './ArchiveEntry';
 import { getParsedLocalStorage, getParsedGenres } from '../utilities/localStorageHandling';
@@ -83,6 +83,30 @@ const Archive: React.FC = () => {
     const [albums, setAlbums] = useState<Album[]>([]);
     const [genreLabels, setGenreLabels] = useState<Record<string, string>>({});
     const [showBack, setShowBack] = useState(false);
+    const archiveSectionRef = useRef<HTMLElement>(null);
+    const [showTopButton, setShowTopButton] = useState(false);
+
+    useEffect(() => {
+        let ticking = false;
+
+        const handleScroll = () => {
+            if (ticking) return;
+            window.requestAnimationFrame(() => {
+                const top = archiveSectionRef.current?.getBoundingClientRect().top;
+                if (top !== undefined) setShowTopButton(top < -100);
+                ticking = false;
+            });
+            ticking = true;
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    function scrollToArchiveTop() {
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        archiveSectionRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    }
 
     // Latched, not derived: `useGenreFilter`'s commit() replaces the URL/state
     // on every in-page filter toggle, which would otherwise wipe this as soon
@@ -157,17 +181,28 @@ const Archive: React.FC = () => {
     elements.push(<ArchiveEntry key="end" kind="year" label="" position="end" />);
 
     return (
-        <section className="archive">
-            <section className="topBar">
-                <button
-                    className={`backArrow${showBack ? ' backArrow--visible' : ''}`}
-                    aria-label="Back to album"
-                    title="Back to album"
-                    onClick={() => { setShowBack(false); navigate(-1); }}
-                ><img src="/images/Arrow.svg" alt="" className="arrowImage" /></button>
-                <h1 className="pageHeader pageHeader--section">THE ARCHIVE</h1>
-            </section>
-            <div className="divider"></div>
+        <section className="archive" ref={archiveSectionRef}>
+            <button
+                type="button"
+                className={`archiveTopButton${showTopButton ? ' archiveTopButton--visible' : ''}`}
+                onClick={scrollToArchiveTop}
+                aria-label="Back to start of the archive"
+                title="Back to start of the archive"
+            >
+                <img src="/images/Arrow.svg" alt="" className="archiveTopArrow" />
+            </button>
+            <div className="stickyHeader">
+                <section className="topBar">
+                    <button
+                        className={`backArrow${showBack ? ' backArrow--visible' : ''}`}
+                        aria-label="Back to album"
+                        title="Back to album"
+                        onClick={() => { setShowBack(false); navigate(-1); }}
+                    ><img src="/images/Arrow.svg" alt="" className="arrowImage" /></button>
+                    <h1 className="pageHeader pageHeader--section">THE ARCHIVE</h1>
+                </section>
+                <div className="divider"></div>
+            </div>
 
             <GenreFilterBar
                 available={availableGenres}

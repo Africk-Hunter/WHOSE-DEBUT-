@@ -14,21 +14,52 @@ function formatTime(seconds: number): string {
 const PreviewAudioPlayer: React.FC<PreviewAudioPlayerProps> = ({ src }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const lastVolumeRef = useRef(0.3);
+    const gainNodeRef = useRef<GainNode | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(0.3);
 
+    // iOS Safari ignores HTMLMediaElement.volume, so route through a
+    // GainNode (Web Audio API) which it does honor. Must be created on a
+    // user gesture, so this runs lazily from togglePlay.
+    const ensureGainNode = () => {
+        const audio = audioRef.current;
+        if (!audio || gainNodeRef.current) return;
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextClass) return;
+        const audioContext = new AudioContextClass();
+        const source = audioContext.createMediaElementSource(audio);
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = lastVolumeRef.current;
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        audioContextRef.current = audioContext;
+        gainNodeRef.current = gainNode;
+    };
+
     useEffect(() => {
         setIsPlaying(false);
         setCurrentTime(0);
         setDuration(0);
-        if (audioRef.current) audioRef.current.volume = lastVolumeRef.current;
+        if (gainNodeRef.current) gainNodeRef.current.gain.value = lastVolumeRef.current;
+        else if (audioRef.current) audioRef.current.volume = lastVolumeRef.current;
     }, [src]);
+
+    useEffect(() => {
+        return () => {
+            audioContextRef.current?.close();
+        };
+    }, []);
 
     const togglePlay = () => {
         const audio = audioRef.current;
         if (!audio) return;
+        ensureGainNode();
+        if (audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume();
+        }
         if (isPlaying) {
             audio.pause();
         } else {
@@ -44,20 +75,24 @@ const PreviewAudioPlayer: React.FC<PreviewAudioPlayerProps> = ({ src }) => {
         setCurrentTime(time);
     };
 
+    const applyVolume = (nextVolume: number) => {
+        if (gainNodeRef.current) {
+            gainNodeRef.current.gain.value = nextVolume;
+        } else if (audioRef.current) {
+            audioRef.current.volume = nextVolume;
+        }
+    };
+
     const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const audio = audioRef.current;
-        if (!audio) return;
         const nextVolume = Number(e.target.value);
         if (nextVolume > 0) lastVolumeRef.current = nextVolume;
-        audio.volume = nextVolume;
+        applyVolume(nextVolume);
         setVolume(nextVolume);
     };
 
     const toggleMute = () => {
-        const audio = audioRef.current;
-        if (!audio) return;
         const nextVolume = volume > 0 ? 0 : (lastVolumeRef.current || 1);
-        audio.volume = nextVolume;
+        applyVolume(nextVolume);
         setVolume(nextVolume);
     };
 
@@ -66,6 +101,7 @@ const PreviewAudioPlayer: React.FC<PreviewAudioPlayerProps> = ({ src }) => {
             <audio
                 ref={audioRef}
                 src={src}
+                crossOrigin="anonymous"
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
                 onEnded={() => setIsPlaying(false)}

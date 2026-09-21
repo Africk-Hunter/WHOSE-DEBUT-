@@ -9,6 +9,49 @@
     scroll-snap-align: start;
 }
 
+.archive .stickyHeader {
+    position: static;
+}
+
+.archiveTopButton {
+    all: unset;
+    position: fixed;
+    right: 2rem;
+    bottom: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    background: $background-color;
+    border: 3px solid $ink;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, background .15s ease;
+    z-index: 30;
+
+    &.archiveTopButton--visible {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            background: $ink;
+
+            .archiveTopArrow { filter: invert(1); }
+        }
+    }
+}
+
+.archiveTopArrow {
+    height: 1.5rem;
+    transform: rotate(90deg);   // arrowhead-up (opposite of .scrollArrow's -90deg down)
+    transition: filter .15s ease;
+}
+
 .gridHolder {
     display: flex;
     width: 80%;

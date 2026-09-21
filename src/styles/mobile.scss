@@ -51,9 +51,22 @@ $mb-gutter: 20px;
     white-space: nowrap;
   }
 
+  // On mobile the tagline becomes the black bar itself (LANDING.md §3, option
+  // 3b) — it replaces the divider's visual job, so .divider--home is hidden
+  // below. Copy is unchanged; only presentation moves.
   .tagline {
-    font-size: clamp(0.75rem, 3vw, 1rem);
-    margin-top: 0.25rem;
+    width: 100%;
+    margin-top: 14px;      // was the divider's margin-top — the bar now sits where the divider did
+    padding: 11px $mb-gutter;
+    background: $mb-ink;
+    color: $mb-bg;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .8125rem;   // 13px
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.4;      // allow a 2nd line to wrap without crowding
+    box-sizing: border-box;
   }
 
   .backArrow {
@@ -80,6 +93,67 @@ $mb-gutter: 20px;
     margin-top: 14px;
   }
 
+  // the home tagline now IS the bar (see .tagline above) — the plain divider
+  // underneath it is redundant on mobile.
+  .divider--home {
+    display: none;
+  }
+
+  // labelled scroll cue, replacing the bottom chevron as the way to discover
+  // the album grid on load (LANDING.md §3). Lives inside the sticky masthead,
+  // so main.tsx fades it out past ~60% of viewport height via scrollCue--hidden.
+  .scrollCue {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid $mb-ink;
+    background: $mb-bg;
+    padding: 12px $mb-gutter;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .75rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: $mb-ink;
+    box-sizing: border-box;
+    max-height: 60px;
+    overflow: hidden;
+    opacity: 1;
+    transition: max-height 220ms ease, padding 220ms ease, border-bottom-width 220ms ease, opacity 150ms ease;
+
+    // folds up into the tagline bar above it (rather than just fading in
+    // place, which would leave a blank gap where it used to sit) once the
+    // user has scrolled past — it's an entry affordance, not a persistent one.
+    &--hidden {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-bottom-width: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &:focus-visible {
+      outline: 3px solid $mb-ink;
+      outline-offset: 2px;
+    }
+
+    @media (hover: hover) {
+      &:hover { background: #F1E9DE; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .scrollCueArrow {
+    height: .875rem;
+    transform: rotate(-90deg);   // matches .scrollArrow's arrowhead-down orientation
+  }
+
   // pins the CTA row to the bottom of the (min-height: 100vh) section instead
   // of leaving it wherever the content above happens to end
   .bottomBar {
@@ -99,12 +173,24 @@ $mb-gutter: 20px;
     color: $mb-muted;
   }
 
+  // the scroll cue at the top of the masthead now does the "get to the grid"
+  // job, so the bottom chevron is redundant on the home section specifically
+  // (Still Fresh keeps its own bottom chevron unchanged).
+  .bottomBar--home {
+    justify-content: flex-start;
+    padding: 16px $mb-gutter 18px $mb-gutter;
+
+    .contactLink { max-width: none; }
+    .scrollArrow { display: none; }
+  }
+
   .scrollArrow .arrowImage { height: 1.75rem; }
 
   // ── 01 · home ──────────────────────────────────────────────────────────────
   .main {
     height: auto;
     min-height: 100vh;
+    min-height: 100svh;   // stable across the address bar showing/hiding, so the "start scrolling" jump lands exactly on Still Fresh's top instead of overshooting into it
     padding-bottom: 0;
   }
 
@@ -119,16 +205,16 @@ $mb-gutter: 20px;
     // which pinned the grid to the top and left dead space below it instead.
     margin: auto 0;
 
-    // #1 is the hero: centred, larger, spans both columns
+    // #1 still leads its own row, centred, but no longer sized up.
+    // It spans both columns, so its image/text widths are pinned to a single
+    // column's width (colWidth = 50% of the row minus half the 16px gap) —
+    // otherwise width:100% on .albumImgHolder would fill the full row instead.
     > .album:first-child {
       grid-column: 1 / -1;
       align-items: center;
       margin-bottom: 6px;
 
-      .albumImgHolder { width: 238px; height: 238px; }
-      .textHolder     { width: 238px; }
-      .albumTitle     { font-size: 1.625rem; line-height: 1.05; }   // 26px
-      .artistName     { font-size: 1.0625rem; }                      // 17px
+      .albumImgHolder, .textHolder { width: calc(50% - 8px); }
     }
   }
 
@@ -159,6 +245,7 @@ $mb-gutter: 20px;
   .stillFresh {
     height: auto;
     min-height: 100vh;
+    min-height: 100svh;
 
     // stillFresh.scss's `.stillFresh .pageHeader { font-size: 5rem }` (two
     // classes) otherwise outranks the shared `.pageHeader` rule above (one
@@ -213,6 +300,15 @@ $mb-gutter: 20px;
     height: auto;
     min-height: 100vh;
   }
+
+  .archiveTopButton {
+    right: 1rem;
+    bottom: 1.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .archiveTopArrow { height: 1.125rem; }
 
   .gridHolder {
     width: 100%;

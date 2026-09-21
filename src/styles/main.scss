@@ -22,6 +22,17 @@
     grid-template-columns: 1fr;
 }
 
+.stickyHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: $background-color;
+}
+
 .backArrow {
     all: unset;
     display: flex;
@@ -87,7 +98,7 @@
     background: $ink;
 
     &.divider--home {
-        height: 2.75rem;   // 44px
+        height: 1.375rem;   // 22px
     }
 }
 
@@ -183,10 +194,14 @@
 
 // Smaller album variant for still fresh section
 .album--small {
-    .albumImgHolder { height: 186px; width: 186px; }
-    .textHolder { width: 186px; }
-    .albumTitle { font-size: 1.375rem; }   // 22px
-    .artistName { font-size: 1.0625rem; }  // 17px
+    .albumImgHolder { height: 166px; width: 166px; }
+    .textHolder { width: 166px; }
+    .albumTitle { font-size: 1.25rem; }    // 20px
+    .artistName { font-size: 1rem; }       // 16px
+
+    @media (min-width: 1025px) {
+        .albumImgHolder { border-width: 2px; }
+    }
 
     @media (max-width: 1024px) {
         .albumImgHolder { height: 150px; width: 150px; }
@@ -227,4 +242,10 @@
     &:visited {
         color: $muted;
     }
+}
+
+// mobile-only scroll cue (mobile.scss) — desktop never shows it, regardless
+// of any future edit to the mobile media query.
+.scrollCue {
+    display: none;
 }

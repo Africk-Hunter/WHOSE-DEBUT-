@@ -19,11 +19,13 @@ function Main() {
     const [inArchive, setInArchive] = useState(false);
     const [albums, setAlbums] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [scrollCueVisible, setScrollCueVisible] = useState(true);
 
     const isMobileWidth = () => window.innerWidth <= 768;
 
     const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
-        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        ref.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     };
 
     useEffect(() => {
@@ -39,6 +41,8 @@ function Main() {
                     }
 
                     const archiveRect = archive.getBoundingClientRect();
+
+                    setScrollCueVisible(window.scrollY < 8);
 
                     const archiveScrolledInto = archiveRect.top < -50;
                     const backNearTop = archiveRect.top > -10 && archiveRect.top < 100;
@@ -113,11 +117,22 @@ function Main() {
     return (
         <section className='all'>
             <main className="main" ref={whoseDebutRef}>
-                <section className="topBar topBar--home">
-                    <h1 className="pageHeader pageHeader--home">WHOSE DEBUT?</h1>
-                </section>
-                <p className="tagline">Reno, Nevada. Weekly releases fresh from local artists</p>
-                <div className="divider divider--home"></div>
+                <div className="stickyHeader">
+                    <section className="topBar topBar--home">
+                        <h1 className="pageHeader pageHeader--home">WHOSE DEBUT?</h1>
+                    </section>
+                    <p className="tagline">Reno, Nevada. Weekly releases fresh from local artists</p>
+                    <div className="divider divider--home"></div>
+                    <button
+                        type="button"
+                        className={`scrollCue${scrollCueVisible ? '' : ' scrollCue--hidden'}`}
+                        onClick={() => scrollToSection(stillFreshRef)}
+                        aria-label="Scroll to the album list"
+                    >
+                        <span className="scrollCueLabel">START SCROLLING</span>
+                        <img src="/images/Arrow.svg" alt="" className="scrollCueArrow" />
+                    </button>
+                </div>
                 <section className="topThree">
                     {heroAlbums.map(album => (
                         <Album
@@ -132,7 +147,7 @@ function Main() {
                         />
                     ))}
                 </section>
-                <section className="bottomBar">
+                <section className="bottomBar bottomBar--home">
                     <a href="/about" className="contactLink">Are you releasing an album? Click here!</a>
                     <button className="scrollArrow" onClick={() => scrollToSection(stillFreshRef)}>
                         <img src="/images/Arrow.svg" alt="" className="arrowImage" />
@@ -140,13 +155,24 @@ function Main() {
                 </section>
             </main>
             <section className="stillFresh" id="stillFresh" ref={stillFreshRef}>
-                <section className="topBar">
-                    <button className="backArrow" onClick={() => scrollToSection(whoseDebutRef)}>
-                        <img src="/images/Arrow.svg" alt="" className="arrowImage" />
+                <div className="stickyHeader">
+                    <section className="topBar">
+                        <button className="backArrow" onClick={() => scrollToSection(whoseDebutRef)}>
+                            <img src="/images/Arrow.svg" alt="" className="arrowImage" />
+                        </button>
+                        <h1 className="pageHeader pageHeader--section">STILL FRESH</h1>
+                    </section>
+                    <div className="divider"></div>
+                    <button
+                        type="button"
+                        className="scrollCue"
+                        onClick={() => scrollToSection(archiveRef)}
+                        aria-label="Scroll to the archive"
+                    >
+                        <span className="scrollCueLabel">KEEP SCROLLING</span>
+                        <img src="/images/Arrow.svg" alt="" className="scrollCueArrow" />
                     </button>
-                    <h1 className="pageHeader pageHeader--section">STILL FRESH</h1>
-                </section>
-                <div className="divider"></div>
+                </div>
                 <section className="stillFreshAlbums">
                     {stillFreshPool.map(album => (
                         <Album
