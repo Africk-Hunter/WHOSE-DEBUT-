@@ -169,6 +169,14 @@
         grid-template-columns: repeat(3, 130px);
         gap: 1.5rem 1rem;
     }
+
+    // Landscape tablets (e.g. iPad Mini 1024x768) have plenty of spare
+    // width alongside limited height — use it for more columns instead
+    // of a taller, narrower 3-column layout.
+    @include short-landscape {
+        grid-template-columns: repeat(5, 130px);
+        gap: 1.25rem 1rem;
+    }
 }
 
 .albumBox {

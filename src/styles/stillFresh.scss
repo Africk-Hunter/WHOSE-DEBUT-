@@ -1,3 +1,5 @@
+@use './variables' as *;
+
 .stillFresh {
     display: flex;
     flex-direction: column;
@@ -29,5 +31,16 @@
         grid-template-columns: repeat(3, 150px);
         column-gap: 32px;
         row-gap: 32px;
+    }
+
+    // Landscape tablets (e.g. iPad Mini 1024x768): the section is a
+    // height:100vh scroll-snap panel with no internal scroll, so the
+    // 3-column/4-row layout above clips the last row. Reflow to
+    // 5 columns x 2 rows instead, trading image size for a layout that
+    // fits entirely on screen.
+    @include short-landscape {
+        grid-template-columns: repeat(5, 136px);
+        column-gap: 24px;
+        row-gap: 24px;
     }
 }

@@ -22,3 +22,12 @@ $spacing-xl: 2rem;
 
 $border-radius: 4px;
 $transition: all 0.3s ease;
+
+// Landscape tablets (e.g. iPad Mini 1024x768): wide but short viewports,
+// where the generic max-width:1024px tier alone leaves 100vh scroll-snap
+// sections too tall to fit.
+@mixin short-landscape {
+    @media (max-width: 1024px) and (max-height: 800px) {
+        @content;
+    }
+}

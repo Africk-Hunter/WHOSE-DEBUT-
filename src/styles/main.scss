@@ -75,6 +75,10 @@
     text-align: center;
 
     @media (max-width: 1024px) { font-size: 1.25rem; margin-top: -1rem; }
+
+    // The negative margin above pulls the tagline into the descender of the
+    // "?" in .pageHeader--home at this width, since it stays on one line here.
+    @include short-landscape { margin-top: 1rem; }
 }
 
 .pageHeader--section {
@@ -120,7 +124,7 @@
 .album {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     gap: .5rem;
     transition: .2s all ease-in;
@@ -209,6 +213,14 @@
         .albumTitle { font-size: 1.125rem; }   // 18px
         .artistName { font-size: .875rem; }    // 14px
     }
+
+    // Matches .stillFreshAlbums' short-landscape grid column width (stillFresh.scss).
+    @include short-landscape {
+        .albumImgHolder { height: 136px; width: 136px; }
+        .textHolder { width: 136px; }
+        .albumTitle { font-size: 1rem; }        // 16px
+        .artistName { font-size: .8125rem; }    // 13px
+    }
 }
 
 .bottomBar {
@@ -241,6 +253,10 @@
 
     &:visited {
         color: $muted;
+    }
+
+    @include short-landscape {
+        font-size: 1.1rem;
     }
 }
 

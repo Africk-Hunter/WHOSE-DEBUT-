@@ -9,7 +9,7 @@ $gf-placeholder: #9A9086;
 
 // Matches .gridHolder exactly (archive.scss).
 .archive .genreFilterBar {
-    width: 90%;
+    width: 80%;
     max-width: 1200px;
 }
 
@@ -28,8 +28,8 @@ $gf-placeholder: #9A9086;
     gap: 0.5rem;
     min-height: 44px;
     padding: 0.5rem 1rem;
-    background: transparent;
-    color: $ink;
+    background: $ink;
+    color: $background-color;
     border: 3px solid $ink;
     font-family: ui-monospace, Menlo, monospace;
     font-size: 0.75rem;
@@ -37,6 +37,14 @@ $gf-placeholder: #9A9086;
     letter-spacing: 0.08em;
     cursor: pointer;
     transition: $transition;
+
+    .genreFilterIcon {
+        border-color: $background-color;
+    }
+
+    .genreFilterIcon::after {
+        background: $background-color;
+    }
 
     &.genreFilterButton--active {
         background: $ink;
