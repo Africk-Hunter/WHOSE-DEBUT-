@@ -3,6 +3,7 @@ import { db } from './firebaseClient';
 import { GenreSlug, SEED_GENRES } from '../genres';
 import { getOrCreateGenre } from './genreInteractions';
 import { Album, FanComment } from '../types';
+import { logError } from '../logger';
 
 interface AlbumData {
     title: string;
@@ -28,7 +29,7 @@ async function loadAlbumsFromDatabase() {
         const albums = await fetchAllAlbumsFromFirebase();
         localStorage.setItem('albums', JSON.stringify(albums.filter(a => !a.hidden)));
     } catch (error) {
-        console.error('Error loading albums from Firestore:', error);
+        logError('Error loading albums from Firestore:', error);
     }
 }
 
@@ -103,7 +104,7 @@ async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string, pre
         alert('Album added successfully');
         return true;
     } catch (error) {
-        console.error('Error adding album:', error);
+        logError('Error adding album:', error);
         alert('Failed to add album: ' + error);
         return false;
     }
@@ -142,7 +143,7 @@ async function updateAlbumInFirebase(
         await updateDoc(doc(db, 'albums', albumId), updates);
         return true;
     } catch (error) {
-        console.error('Error updating album:', error);
+        logError('Error updating album:', error);
         alert('Failed to update album: ' + error);
         return false;
     }
@@ -153,7 +154,7 @@ async function deleteAlbumFromFirebase(albumId: string): Promise<boolean> {
         await deleteDoc(doc(db, 'albums', albumId));
         return true;
     } catch (error) {
-        console.error('Error deleting album:', error);
+        logError('Error deleting album:', error);
         alert('Failed to delete album: ' + error);
         return false;
     }
@@ -164,7 +165,7 @@ async function updateAlbumComments(albumId: string, comments: FanComment[]): Pro
         await updateDoc(doc(db, 'albums', albumId), { comments });
         return true;
     } catch (error) {
-        console.error('Error updating comments:', error);
+        logError('Error updating comments:', error);
         alert('Failed to update comments: ' + error);
         return false;
     }
@@ -175,7 +176,7 @@ async function updateAlbumHidden(albumId: string, hidden: boolean): Promise<bool
         await updateDoc(doc(db, 'albums', albumId), { hidden });
         return true;
     } catch (error) {
-        console.error('Error updating album visibility:', error);
+        logError('Error updating album visibility:', error);
         alert('Failed to update album visibility: ' + error);
         return false;
     }

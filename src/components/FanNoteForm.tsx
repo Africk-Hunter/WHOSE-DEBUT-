@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import emailjs from 'emailjs-com';
 import { validateFanNote, FanNoteDraft, FanNoteErrors, BODY_MAX } from '../utilities/fanNotes';
+import { logError } from '../utilities/logger';
 
 interface FanNoteFormProps {
     albumId: string;
@@ -34,15 +35,13 @@ const FanNoteForm: React.FC<FanNoteFormProps> = ({ albumId, albumName, artist, c
         }
     }, [storageKey]);
 
-    // The form is taller than the resting CTA, so on desktop (where the fan
-    // note card sits pinned near the bottom of AlbumView's own scroll
-    // container) opening it can push itself below the fold. Follow it down
-    // so the newly opened form is actually visible without the user hunting
-    // for it. Mobile lays the page out normally, so it's left alone.
+    // The form is taller than the resting CTA, so opening it can push itself
+    // below the fold (on desktop, within AlbumView's own scroll container;
+    // on mobile, off the bottom of the page). Follow it down so the newly
+    // opened form is actually visible without the user hunting for it.
     useEffect(() => {
         if (!open) return;
-        if (!window.matchMedia('(min-width: 769px)').matches) return;
-        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, [open]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -86,7 +85,7 @@ const FanNoteForm: React.FC<FanNoteFormProps> = ({ albumId, albumName, artist, c
             setOpen(false);
             setDraft(EMPTY_DRAFT);
         } catch (error) {
-            console.error('Failed to send fan note:', error);
+            logError('Failed to send fan note:', error);
             alert('Failed to send your note. Please try again.');
         } finally {
             setSending(false);

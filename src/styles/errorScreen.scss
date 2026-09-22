@@ -1,0 +1,36 @@
+@use './variables' as *;
+
+.errorScreen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-lg;
+  background: $background-color;
+  text-align: center;
+  padding: $spacing-lg;
+}
+
+.errorScreenText {
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  color: $ink-soft;
+}
+
+.errorScreenButton {
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $border-radius;
+  border: 1px solid $ink-soft;
+  background: transparent;
+  color: $ink;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: $transition;
+
+  &:hover {
+    background: $ink;
+    color: $background-color;
+  }
+}

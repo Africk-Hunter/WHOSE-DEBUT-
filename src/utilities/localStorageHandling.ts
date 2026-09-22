@@ -21,7 +21,11 @@ function pullAlbumInfoByID(ID: string) {
 function getParsedLocalStorage() {
     const storedAlbums = localStorage.getItem('albums');
     if (storedAlbums) {
-        return JSON.parse(storedAlbums);
+        try {
+            return JSON.parse(storedAlbums);
+        } catch {
+            return [];
+        }
     }
     return [];
 }
@@ -33,7 +37,11 @@ function setGenresInLocalStorage(genres: object[]) {
 function getParsedGenres() {
     const storedGenres = localStorage.getItem('genres');
     if (storedGenres) {
-        return JSON.parse(storedGenres);
+        try {
+            return JSON.parse(storedGenres);
+        } catch {
+            return [];
+        }
     }
     return [];
 }

@@ -26,6 +26,12 @@ $mb-gutter: 20px;
 
   .all { scroll-snap-type: none; }
 
+  // applied briefly by main.tsx's "start scrolling" handler so the
+  // tagline/scrollCue collapse lands instantly instead of over their normal
+  // 380ms transition, which would otherwise keep shrinking .main underneath
+  // an in-flight smooth-scroll and make it overshoot Still Fresh's top.
+  .noTransition, .noTransition * { transition: none !important; }
+
   // ── shared chrome ──────────────────────────────────────────────────────────
   // 3-column grid (arrow | header | matching spacer) instead of flex — a flex
   // row only reserves space for the arrow on the left, so hiding it (opacity:0
@@ -67,6 +73,36 @@ $mb-gutter: 20px;
     text-align: center;
     line-height: 1.4;      // allow a 2nd line to wrap without crowding
     box-sizing: border-box;
+    overflow: hidden;
+    transition: padding 380ms cubic-bezier(.4, 0, .2, 1);
+
+    // shrinks alongside .scrollCue folding in — the tagline copy pulls up
+    // and out of the bar while the bar's padding drops in step, so it reads
+    // as a thin divider, not a second full-size bar competing with the
+    // header once scrolled past.
+    &--collapsed {
+      padding: 10px $mb-gutter;
+
+      .taglineText {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-100%);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .taglineText {
+    display: block;
+    max-height: 40px;   // allows the 2-line-wrap case; collapses to 0 so the bar itself shrinks, not just the text
+    transition: opacity 280ms cubic-bezier(.4, 0, .2, 1), transform 380ms cubic-bezier(.4, 0, .2, 1), max-height 380ms cubic-bezier(.4, 0, .2, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   .backArrow {
@@ -121,7 +157,7 @@ $mb-gutter: 20px;
     max-height: 60px;
     overflow: hidden;
     opacity: 1;
-    transition: max-height 220ms ease, padding 220ms ease, border-bottom-width 220ms ease, opacity 150ms ease;
+    transition: max-height 380ms cubic-bezier(.4, 0, .2, 1), padding 380ms cubic-bezier(.4, 0, .2, 1), border-bottom-width 380ms cubic-bezier(.4, 0, .2, 1), opacity 280ms cubic-bezier(.4, 0, .2, 1);
 
     // folds up into the tagline bar above it (rather than just fading in
     // place, which would leave a blank gap where it used to sit) once the
@@ -133,6 +169,8 @@ $mb-gutter: 20px;
       border-bottom-width: 0;
       opacity: 0;
       pointer-events: none;
+
+      .scrollCueContent { transform: translateY(-14px); }
     }
 
     &:focus-visible {
@@ -149,9 +187,37 @@ $mb-gutter: 20px;
     }
   }
 
+  .scrollCueContent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 380ms cubic-bezier(.4, 0, .2, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
   .scrollCueArrow {
-    height: .875rem;
+    height: 1em;   // matches the label's font-size so arrow and text sit the same height
     transform: rotate(-90deg);   // matches .scrollArrow's arrowhead-down orientation
+  }
+
+  // "keep scrolling" cue (stillFresh section) nudges every few seconds to draw
+  // the eye back to it, rather than animating continuously.
+  @keyframes scrollCueArrowBounce {
+    0%, 70%, 100% { transform: rotate(-90deg) translateY(0); }
+    78% { transform: rotate(-90deg) translateY(-5px); }
+    86% { transform: rotate(-90deg) translateY(0); }
+    92% { transform: rotate(-90deg) translateY(-3px); }
+  }
+
+  .stillFresh .scrollCueArrow {
+    animation: scrollCueArrowBounce 3.5s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stillFresh .scrollCueArrow { animation: none; }
   }
 
   // pins the CTA row to the bottom of the (min-height: 100vh) section instead
@@ -159,29 +225,26 @@ $mb-gutter: 20px;
   .bottomBar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 12px;
     width: 100%;
     margin-top: auto;
     padding: 16px $mb-gutter 18px $mb-gutter;
+
+    // the scroll cue at the top of each section now does the "get to the
+    // next section" job, so the bottom chevron is redundant on mobile.
+    .scrollArrow { display: none; }
   }
 
   .contactLink {
-    max-width: 250px;
+    max-width: none;
     font-size: .9375rem;  // 15px
     line-height: 1.2;
     color: $mb-muted;
   }
 
-  // the scroll cue at the top of the masthead now does the "get to the grid"
-  // job, so the bottom chevron is redundant on the home section specifically
-  // (Still Fresh keeps its own bottom chevron unchanged).
   .bottomBar--home {
-    justify-content: flex-start;
     padding: 16px $mb-gutter 18px $mb-gutter;
-
-    .contactLink { max-width: none; }
-    .scrollArrow { display: none; }
   }
 
   .scrollArrow .arrowImage { height: 1.75rem; }
@@ -203,6 +266,9 @@ $mb-gutter: 20px;
     // desktop centers topThree vertically between the divider and bottomBar via
     // `margin: auto 0` on a flex `.main` — mobile was zeroing that margin,
     // which pinned the grid to the top and left dead space below it instead.
+    // The header's own height/padding transitions already drive a smooth
+    // flex reflow here as it collapses, so no extra transform is needed —
+    // one previously stacked on top just grew a gap to bottomBar below.
     margin: auto 0;
 
     // #1 still leads its own row, centred, but no longer sized up.
@@ -222,6 +288,12 @@ $mb-gutter: 20px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    // main.scss centers albums vertically for desktop's fixed-height row;
+    // on mobile the grid stretches each .album to the tallest item in its
+    // row, so centering here would push shorter-titled covers down whenever
+    // a sibling's title wraps to 2 lines. Pin to the top instead so covers
+    // stay aligned regardless of title length.
+    justify-content: flex-start;
     gap: 8px;
 
     // no hover scale on touch

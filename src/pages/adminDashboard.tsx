@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../utilities/database/firebaseClient';
+import { auth } from '../utilities/database/firebaseAuth';
 import {
     uploadCoverToCloudinary,
     uploadPreviewAudioToCloudinary,
@@ -22,6 +22,7 @@ import { Album, FanComment } from '../utilities/types';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 import LoadingScreen from '../components/LoadingScreen';
 import AudioClipSelector from '../components/AudioClipSelector';
+import { logError } from '../utilities/logger';
 
 interface AlbumFormData {
     title: string;
@@ -482,7 +483,7 @@ const AdminDashboard: React.FC = () => {
                 if (error instanceof AudioProcessingError) {
                     alert(error.message);
                 } else {
-                    console.error('Error processing preview audio:', error);
+                    logError('Error processing preview audio:', error);
                     alert('Failed to process preview audio.');
                 }
                 setEditIsProcessingAudio(false);
@@ -595,7 +596,7 @@ const AdminDashboard: React.FC = () => {
                 if (error instanceof AudioProcessingError) {
                     alert(error.message);
                 } else {
-                    console.error('Error processing preview audio:', error);
+                    logError('Error processing preview audio:', error);
                     alert('Failed to process preview audio.');
                 }
                 setIsProcessingAudio(false);

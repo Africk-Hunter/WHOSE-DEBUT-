@@ -1,10 +1,11 @@
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { lazy, Suspense, useRef, useEffect, useState, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Album from '../components/Album'
 import Footer from '../components/Footer'
 import Archive from '../components/Archive';
 import LoadingScreen from '../components/LoadingScreen';
-import AlbumView from './albumView';
+
+const AlbumView = lazy(() => import('./albumView'));
 
 import { sortAlbumsByReleaseDate, getParsedLocalStorage, setGenresInLocalStorage } from '../utilities/localStorageHandling';
 import { loadAlbumsFromDatabase } from '../utilities/database/firebaseInteractions';
@@ -17,6 +18,7 @@ function Main() {
     const whoseDebutRef = useRef<HTMLElement>(null);
     const stillFreshRef = useRef<HTMLElement>(null);
     const archiveRef = useRef<HTMLElement>(null);
+    const homeStickyHeaderRef = useRef<HTMLDivElement>(null);
     const [inArchive, setInArchive] = useState(false);
     const [albums, setAlbums] = useState<AlbumType[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,6 +29,24 @@ function Main() {
     const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         ref.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    };
+
+    // On mobile, scrollCueVisible flipping false mid-scroll shrinks the
+    // tagline/scrollCue via a 380ms CSS transition, which shortens .main and
+    // moves Still Fresh's top out from under the in-flight smooth-scroll
+    // target — the page overshoots past it. Collapsing instantly (no
+    // transition) before the scroll starts settles that layout shift first,
+    // so the target stays put for the whole animation.
+    const handleStartScrolling = () => {
+        const header = homeStickyHeaderRef.current;
+        header?.classList.add('noTransition');
+        setScrollCueVisible(false);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                scrollToSection(stillFreshRef);
+                header?.classList.remove('noTransition');
+            });
+        });
     };
 
     useEffect(() => {
@@ -118,35 +138,43 @@ function Main() {
     return (
         <section className='all'>
             <main className="main" ref={whoseDebutRef}>
-                <div className="stickyHeader">
+                <div className="stickyHeader" ref={homeStickyHeaderRef}>
                     <section className="topBar topBar--home">
                         <h1 className="pageHeader pageHeader--home">WHOSE DEBUT?</h1>
                     </section>
-                    <p className="tagline">Reno, Nevada. Weekly releases fresh from local artists</p>
+                    <p className={`tagline${scrollCueVisible ? '' : ' tagline--collapsed'}`}>
+                        <span className="taglineText">Reno, Nevada. Weekly releases fresh from local artists</span>
+                    </p>
                     <div className="divider divider--home"></div>
                     <button
                         type="button"
                         className={`scrollCue${scrollCueVisible ? '' : ' scrollCue--hidden'}`}
-                        onClick={() => scrollToSection(stillFreshRef)}
+                        onClick={handleStartScrolling}
                         aria-label="Scroll to the album list"
                     >
-                        <span className="scrollCueLabel">START SCROLLING</span>
-                        <img src="/images/Arrow.svg" alt="" className="scrollCueArrow" />
+                        <span className="scrollCueContent">
+                            <span className="scrollCueLabel">START SCROLLING</span>
+                            <img src="/images/Arrow.svg" alt="" className="scrollCueArrow" />
+                        </span>
                     </button>
                 </div>
                 <section className="topThree">
-                    {heroAlbums.map(album => (
-                        <Album
-                            key={album.id}
-                            type={null}
-                            title={album.name}
-                            artist={album.artist}
-                            image={album.image_url}
-                            id={album.id}
-                            rank={album.rank}
-                            genre={album.genres?.[0]}
-                        />
-                    ))}
+                    {heroAlbums.length === 0 ? (
+                        <p className="emptyState">No albums yet — check back soon.</p>
+                    ) : (
+                        heroAlbums.map(album => (
+                            <Album
+                                key={album.id}
+                                type={null}
+                                title={album.name}
+                                artist={album.artist}
+                                image={album.image_url}
+                                id={album.id}
+                                rank={album.rank}
+                                genre={album.genres?.[0]}
+                            />
+                        ))
+                    )}
                 </section>
                 <section className="bottomBar bottomBar--home">
                     <a href="/about" className="contactLink">Are you releasing an album? Click here!</a>
@@ -199,7 +227,11 @@ function Main() {
                 <Archive />
             </section>
             <Footer />
-            {albumId && <AlbumView albumId={albumId} />}
+            {albumId && (
+                <Suspense fallback={<LoadingScreen />}>
+                    <AlbumView albumId={albumId} />
+                </Suspense>
+            )}
         </section>
 
     );

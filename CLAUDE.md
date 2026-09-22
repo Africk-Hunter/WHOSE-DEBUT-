@@ -79,6 +79,7 @@ Two separate, non-overlapping mechanisms share the "fan feedback" idea:
 | `preview_audio_url` | Optional. 30-second WAV preview clip, auto-trimmed client-side from admin upload |
 | `preview_song_name` | Optional. Display name for the preview track, set alongside `preview_audio_url` |
 | `comments` | Optional `FanComment[]` (`{ id, name, text }`), admin-moderated, rendered as "Fan Notes" on `AlbumView` |
+| `hidden` | Optional boolean, toggled from the admin dashboard's "Manage Albums" tab. Hidden albums are filtered out of `loadAlbumsFromDatabase`'s localStorage write, so they never appear on the home page, Still Fresh, or Archive, but remain in Firestore and stay editable from Manage Albums |
 
 **Firestore collection: `genres`** — doc ID is the slug; `{ label: string }` is the only field. See Genre System above.
 

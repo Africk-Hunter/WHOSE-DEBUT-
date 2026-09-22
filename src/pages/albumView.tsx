@@ -33,11 +33,23 @@ interface AlbumViewProps {
 const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
     const navigate = useNavigate();
     const [album, setAlbum] = useState<Album | null>(null);
+    const [notFound, setNotFound] = useState(false);
 
     useEffect(() => {
         const ID = albumId ?? localStorage.getItem('selectedID') ?? '0';
-        setAlbum(pullAlbumInfoByID(ID));
+        const found = pullAlbumInfoByID(ID);
+        setAlbum(found);
+        setNotFound(!found);
     }, [albumId]);
+
+    if (notFound) {
+        return (
+            <div className="errorScreen">
+                <p className="errorScreenText">This album isn't available anymore.</p>
+                <Link to="/" className="errorScreenButton">Back to WHOSE DEBUT?</Link>
+            </div>
+        );
+    }
 
     if (!album) return <LoadingScreen />;
 

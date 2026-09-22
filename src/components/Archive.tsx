@@ -218,7 +218,9 @@ const Archive: React.FC = () => {
             />
 
             <section className="gridHolder">
-                {elements}
+                {archivePool.length === 0 ? (
+                    <p className="emptyState">No albums yet — check back soon.</p>
+                ) : elements}
             </section>
         </section>
     );
