@@ -29,8 +29,8 @@ const AdminPanel: React.FC = () => {
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 setAuthSuccess(true);
-            } catch (error: any) {
-                setAuthError(error.message);
+            } catch (error) {
+                setAuthError(error instanceof Error ? error.message : 'Login failed');
                 setLoading(false);
             }
         } else {

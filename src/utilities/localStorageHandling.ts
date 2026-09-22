@@ -1,7 +1,7 @@
 function sortAlbumsByReleaseDate() {
     const parsed = getParsedLocalStorage()
     if (Array.isArray(parsed)) {
-        let sortedAlbums = parsed.sort((b, a) => new Date(a.year_released).getTime() - new Date(b.year_released).getTime());
+        const sortedAlbums = parsed.sort((b, a) => new Date(a.year_released).getTime() - new Date(b.year_released).getTime());
         localStorage.setItem('albums', JSON.stringify(sortedAlbums));
     }
 }
@@ -9,7 +9,7 @@ function sortAlbumsByReleaseDate() {
 function pullAlbumInfoByID(ID: string) {
     const parsed = getParsedLocalStorage()
     if (Array.isArray(parsed)) {
-        for (var i = 0; i < parsed.length; i++) {
+        for (let i = 0; i < parsed.length; i++) {
             if (parsed[i].id == ID) {
                 return parsed[i]
             }
@@ -19,7 +19,7 @@ function pullAlbumInfoByID(ID: string) {
 }
 
 function getParsedLocalStorage() {
-    let storedAlbums = localStorage.getItem('albums');
+    const storedAlbums = localStorage.getItem('albums');
     if (storedAlbums) {
         return JSON.parse(storedAlbums);
     }

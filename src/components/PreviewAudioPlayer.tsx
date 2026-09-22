@@ -27,7 +27,7 @@ const PreviewAudioPlayer: React.FC<PreviewAudioPlayerProps> = ({ src }) => {
     const ensureGainNode = () => {
         const audio = audioRef.current;
         if (!audio || gainNodeRef.current) return;
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
         if (!AudioContextClass) return;
         const audioContext = new AudioContextClass();
         const source = audioContext.createMediaElementSource(audio);

@@ -7,6 +7,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 import FanNoteForm from '../components/FanNoteForm';
 import PreviewAudioPlayer from '../components/PreviewAudioPlayer';
+import type { Album } from '../utilities/types';
 
 function isSafeUrl(url: string): boolean {
     try {
@@ -16,7 +17,9 @@ function isSafeUrl(url: string): boolean {
     }
 }
 
-const services = [
+type StreamingLinkField = 'spotify' | 'apple' | 'bandcamp' | 'amazon';
+
+const services: { key: StreamingLinkField; href: StreamingLinkField; label: string; icon: string }[] = [
     { key: 'spotify', href: 'spotify', label: 'Spotify', icon: '/images/Spotify.png' },
     { key: 'apple', href: 'apple', label: 'Apple', icon: '/images/AppleMusic.png' },
     { key: 'bandcamp', href: 'bandcamp', label: 'Bandcamp', icon: '/images/Bandcamp.png' },
@@ -29,7 +32,7 @@ interface AlbumViewProps {
 
 const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
     const navigate = useNavigate();
-    const [album, setAlbum] = useState<any>(null);
+    const [album, setAlbum] = useState<Album | null>(null);
 
     useEffect(() => {
         const ID = albumId ?? localStorage.getItem('selectedID') ?? '0';

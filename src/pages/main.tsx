@@ -9,6 +9,7 @@ import AlbumView from './albumView';
 import { sortAlbumsByReleaseDate, getParsedLocalStorage, setGenresInLocalStorage } from '../utilities/localStorageHandling';
 import { loadAlbumsFromDatabase } from '../utilities/database/firebaseInteractions';
 import { fetchAllGenres } from '../utilities/database/genreInteractions';
+import type { Album as AlbumType } from '../utilities/types';
 
 function Main() {
     const { albumId } = useParams();
@@ -17,7 +18,7 @@ function Main() {
     const stillFreshRef = useRef<HTMLElement>(null);
     const archiveRef = useRef<HTMLElement>(null);
     const [inArchive, setInArchive] = useState(false);
-    const [albums, setAlbums] = useState<any[]>([]);
+    const [albums, setAlbums] = useState<AlbumType[]>([]);
     const [loading, setLoading] = useState(true);
     const [scrollCueVisible, setScrollCueVisible] = useState(true);
 

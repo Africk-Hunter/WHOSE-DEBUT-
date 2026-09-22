@@ -19,12 +19,10 @@ const Contact = () => {
       e.target as HTMLFormElement,
       import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-      .then((result: any) => {
-        console.log(result.text);
+      .then(() => {
         setSubmitted(true);
-      }, (error: any) => {
-        console.log(error.text);
-        alert('Error: ' + error.text);
+      }, (error: { text?: string }) => {
+        alert('Error: ' + (error.text ?? 'Something went wrong sending your message.'));
       });
   };
 
