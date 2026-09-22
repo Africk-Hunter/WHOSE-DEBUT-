@@ -10,6 +10,7 @@ const AlbumView = lazy(() => import('./albumView'));
 import { sortAlbumsByReleaseDate, getParsedLocalStorage, setGenresInLocalStorage } from '../utilities/localStorageHandling';
 import { loadAlbumsFromDatabase } from '../utilities/database/firebaseInteractions';
 import { fetchAllGenres } from '../utilities/database/genreInteractions';
+import { logError } from '../utilities/logger';
 import type { Album as AlbumType } from '../utilities/types';
 
 function Main() {
@@ -100,9 +101,14 @@ function Main() {
             sortAlbumsByReleaseDate();
             const parsed = getParsedLocalStorage();
             setAlbums(parsed);
-            const genres = await fetchAllGenres();
-            setGenresInLocalStorage(genres);
-            setLoading(false);
+            try {
+                const genres = await fetchAllGenres();
+                setGenresInLocalStorage(genres);
+            } catch (error) {
+                logError('Error loading genres from Firestore:', error);
+            } finally {
+                setLoading(false);
+            }
         };
         init();
 
