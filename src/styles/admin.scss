@@ -400,6 +400,18 @@
     margin: 0;
 }
 
+.hiddenBadge {
+    margin-left: 0.6rem;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $muted;
+    border: 1px solid #D8CFC4;
+    border-radius: 999px;
+}
+
 .albumListMeta {
     font-size: 0.85rem;
     color: $muted;

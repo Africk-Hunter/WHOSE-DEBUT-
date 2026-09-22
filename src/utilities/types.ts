@@ -21,4 +21,5 @@ export interface Album {
     preview_audio_url?: string;
     preview_song_name?: string;
     comments?: FanComment[];
+    hidden?: boolean;
 }

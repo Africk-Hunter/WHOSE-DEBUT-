@@ -638,6 +638,11 @@ $mb-gutter: 20px;
   .about { min-height: 100vh;
   gap: 0rem; }
 
+  // main.scss's `.pageHeader--about` (two classes) otherwise outranks the
+  // shared `.pageHeader` rule above (one class) regardless of source order —
+  // same fix as `.stillFresh .pageHeader` above, keeping it matching size.
+  .about .pageHeader--about { font-size: 3rem; }
+
   .aboutContent {
     display: flex;
     flex-direction: column;

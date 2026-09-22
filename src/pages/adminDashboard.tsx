@@ -10,6 +10,7 @@ import {
     updateAlbumInFirebase,
     deleteAlbumFromFirebase,
     updateAlbumComments,
+    updateAlbumHidden,
     seedTestAlbums,
     buildAlbumUpdatePayload,
 } from '../utilities/database/firebaseInteractions';
@@ -504,6 +505,13 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handleToggleHidden = async (album: Album) => {
+        const success = await updateAlbumHidden(album.id, !album.hidden);
+        if (success) {
+            setAlbums(prev => prev.map(a => (a.id === album.id ? { ...a, hidden: !album.hidden } : a)));
+        }
+    };
+
     const handleDeleteAlbum = async (album: Album) => {
         const confirmed = window.confirm(`Delete "${album.name}" by ${album.artist}? This cannot be undone.`);
         if (!confirmed) return;
@@ -754,12 +762,18 @@ const AdminDashboard: React.FC = () => {
                                             <img src={optimizeCloudinaryUrl(album.image_url, 120)} alt="" className="albumListThumb" />
                                         )}
                                         <div className="albumListInfo">
-                                            <p className="albumListTitle">{album.name}</p>
+                                            <p className="albumListTitle">
+                                                {album.name}
+                                                {album.hidden && <span className="hiddenBadge">Hidden</span>}
+                                            </p>
                                             <p className="albumListMeta">{album.artist} &middot; {album.year_released}</p>
                                         </div>
                                         <div className="albumListActions">
                                             <button type="button" className="adminButton" onClick={() => startEditingAlbum(album)}>
                                                 Edit
+                                            </button>
+                                            <button type="button" className="adminButton" onClick={() => handleToggleHidden(album)}>
+                                                {album.hidden ? 'Unhide' : 'Hide'}
                                             </button>
                                             <button type="button" className="adminButton adminButton--danger" onClick={() => handleDeleteAlbum(album)}>
                                                 Delete

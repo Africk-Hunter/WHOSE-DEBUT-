@@ -47,6 +47,7 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
             <div className="albumTopRow">
                 <button className="back" onClick={() => navigate(-1)}><img src="/images/Arrow.svg" alt="Return" /></button>
                 <span className="albumBreadcrumb">WHOSE DEBUT?</span>
+                <a href="/about" className="albumTopCTA">Are you releasing an album? Click here!</a>
             </div>
             <section className="albumInfo">
                 <img src={optimizeCloudinaryUrl(album.image_url, 800)} alt={`${album.name} by ${album.artist}`} className="cover" decoding="async" />

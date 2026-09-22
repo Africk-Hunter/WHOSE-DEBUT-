@@ -26,7 +26,7 @@ async function fetchAllAlbumsFromFirebase(): Promise<Album[]> {
 async function loadAlbumsFromDatabase() {
     try {
         const albums = await fetchAllAlbumsFromFirebase();
-        localStorage.setItem('albums', JSON.stringify(albums));
+        localStorage.setItem('albums', JSON.stringify(albums.filter(a => !a.hidden)));
     } catch (error) {
         console.error('Error loading albums from Firestore:', error);
     }
@@ -170,6 +170,17 @@ async function updateAlbumComments(albumId: string, comments: FanComment[]): Pro
     }
 }
 
+async function updateAlbumHidden(albumId: string, hidden: boolean): Promise<boolean> {
+    try {
+        await updateDoc(doc(db, 'albums', albumId), { hidden });
+        return true;
+    } catch (error) {
+        console.error('Error updating album visibility:', error);
+        alert('Failed to update album visibility: ' + error);
+        return false;
+    }
+}
+
 async function seedTestAlbums(): Promise<void> {
     const artists = [
         'The Reno Drifters', 'Sierra Soundwave', 'Desert Echo', 'Neon Sage', 'Basin & Range',
@@ -235,6 +246,7 @@ export {
     updateAlbumInFirebase,
     deleteAlbumFromFirebase,
     updateAlbumComments,
+    updateAlbumHidden,
     seedTestAlbums,
     buildAlbumUpdatePayload,
 };
