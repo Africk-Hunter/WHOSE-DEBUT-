@@ -30,6 +30,7 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MEASUREMENT_ID=
 VITE_CLOUDINARY_CLOUD_NAME=
 VITE_CLOUDINARY_UPLOAD_PRESET=
 VITE_CLOUDINARY_AUDIO_UPLOAD_PRESET=
@@ -88,6 +89,8 @@ Two separate, non-overlapping mechanisms share the "fan feedback" idea:
 **Preview audio hosting: Cloudinary** — an optional album preview clip is decoded client-side with the Web Audio API, trimmed to a fixed-length window the admin drags over a waveform, and re-encoded as a WAV blob, then uploaded unsigned to Cloudinary's `/video/upload` endpoint (Cloudinary treats audio under the "video" resource type). Uses a **second, separate** unsigned preset via `VITE_CLOUDINARY_AUDIO_UPLOAD_PRESET` — this preset must be created manually in the Cloudinary dashboard (Settings → Upload → Add upload preset, set to unsigned) before the feature works; it cannot be created from code. The returned `secure_url` is stored as `preview_audio_url` and is only written to Firestore when a preview was actually uploaded. Playback on `AlbumView` goes through `PreviewAudioPlayer.tsx`, which routes volume through a Web Audio `GainNode` because iOS Safari ignores `HTMLMediaElement.volume` directly.
 
 **Auth** — Firebase email/password. Admin user must be created manually in the Firebase Console under Authentication → Users.
+
+**Analytics** — Firebase Analytics (Google Analytics). `analyticsReady` in [src/utilities/database/firebaseClient.ts](src/utilities/database/firebaseClient.ts) is a `Promise<Analytics | null>` that resolves to `null` if `VITE_FIREBASE_MEASUREMENT_ID` isn't set or the browser doesn't support Analytics (e.g. an ad blocker); nothing throws if analytics is unavailable. [src/hooks/usePageTracking.ts](src/hooks/usePageTracking.ts) logs a `page_view` event on every route change and is called once from `App.tsx`. Requires enabling Google Analytics for the Firebase project in the Firebase Console (Project settings → Integrations) to get a Measurement ID.
 
 ### Routes
 
