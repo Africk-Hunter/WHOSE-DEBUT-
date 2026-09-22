@@ -203,21 +203,23 @@ $mb-gutter: 20px;
     transform: rotate(-90deg);   // matches .scrollArrow's arrowhead-down orientation
   }
 
-  // "keep scrolling" cue (stillFresh section) nudges every few seconds to draw
-  // the eye back to it, rather than animating continuously.
+  // scroll cues (hero + stillFresh sections) nudge every few seconds to draw
+  // the eye back to them, rather than animating continuously. translateY has
+  // to come before rotate(-90deg) in the list so it moves along the screen's
+  // vertical axis, not the arrow's own (already-rotated) local axis.
   @keyframes scrollCueArrowBounce {
-    0%, 70%, 100% { transform: rotate(-90deg) translateY(0); }
-    78% { transform: rotate(-90deg) translateY(-5px); }
-    86% { transform: rotate(-90deg) translateY(0); }
-    92% { transform: rotate(-90deg) translateY(-3px); }
+    0%, 70%, 100% { transform: translateY(0) rotate(-90deg); }
+    78% { transform: translateY(-5px) rotate(-90deg); }
+    86% { transform: translateY(0) rotate(-90deg); }
+    92% { transform: translateY(-3px) rotate(-90deg); }
   }
 
-  .stillFresh .scrollCueArrow {
+  .scrollCueArrow {
     animation: scrollCueArrowBounce 3.5s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .stillFresh .scrollCueArrow { animation: none; }
+    .scrollCueArrow { animation: none; }
   }
 
   // pins the CTA row to the bottom of the (min-height: 100vh) section instead
