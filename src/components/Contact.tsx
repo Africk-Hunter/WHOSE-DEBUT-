@@ -36,7 +36,7 @@ const Contact = () => {
           <form className='emailOptionsWrapper' onSubmit={handleSubmit}>
             <FormField id='name' elementName='name' placeholderText='Your Name/Artist Name' elementValue={formData.name} onChangeFunc={handleChange} />
             <FormField id='email' elementName='email' placeholderText='Your Email Address' elementValue={formData.email} onChangeFunc={handleChange} elementType="email" />
-            <FormField id='message' elementName='message' placeholderText='A little bit about yourself. What are you about? What is your album about? Keep it concise, we can discuss the details later :)' elementValue={formData.message} onChangeFunc={handleChange} />
+            <FormField id='message' elementName='message' placeholderText='A little bit about yourself. What are you about? What is your album about? Keep it concise, we can discuss the details later :) And no—it does not have to be a debut album!' elementValue={formData.message} onChangeFunc={handleChange} />
 
             <div className="buttonWrapper">
               <button className="messageSubmitButton" type="submit">Send</button>

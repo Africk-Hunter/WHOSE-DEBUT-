@@ -29,10 +29,27 @@
         padding: 3.72rem 7.43rem 3.72rem 3rem;
         gap: 2rem;
     }
+
+    // Desktop swaps to a grid so .albumBottomGroup can sit in row 2 of the
+    // rightmost track — flush under .albumInfo's own height (the media
+    // player is its last child) and pinned to the far-right edge — without
+    // .albumReviews' taller content affecting that row's height. flex-wrap
+    // above only fits mobile/no-JS fallback.
+    @media (min-width: 769px) {
+        display: grid;
+        grid-template-columns: max-content auto minmax(0, 1fr);
+        grid-template-rows: auto auto;
+    }
 }
 
-// wraps .back + .albumBreadcrumb + .albumTopCTA. Stacked as a column on
-// desktop so the about link sits under the back arrow without disturbing
+@media (min-width: 769px) {
+    .albumTopRow { grid-column: 1; grid-row: 1; }
+    .albumInfo { grid-column: 2; grid-row: 1; }
+    .albumReviews { grid-column: 3; grid-row: 1 / span 2; }
+}
+
+// wraps .back + .albumBreadcrumb. Stacked as a column on
+// desktop so future top-row content sits under the back arrow without disturbing
 // .albumInfo/.albumReviews' position in .albumView's row-wrap flex layout.
 .albumTopRow {
     display: flex;
@@ -47,17 +64,6 @@
 
 .albumTopCTA {
     display: none;
-
-    @media (min-width: 769px) {
-        display: inline-block;
-        max-width: 8rem;
-        font-size: 0.9rem;
-        line-height: 1.3;
-        text-decoration: underline;
-        color: $muted;
-
-        &:visited { color: $muted; }
-    }
 }
 
 .back {
@@ -85,15 +91,21 @@
     color: $muted;
 
     &:visited { color: $muted; }
-}
-
-// Mobile-only now — the same link lives in .albumTopRow (as .albumTopCTA)
-// on desktop, next to the back arrow.
-.albumBottomGroup {
-    display: flex;
 
     @media (min-width: 769px) {
-        display: none;
+        font-size: 1.35rem;
+    }
+}
+
+.albumBottomGroup {
+    display: flex;
+    flex-basis: 100%;   // mobile/no-JS fallback row in .albumView's flex-wrap
+    justify-content: flex-end;
+
+    @media (min-width: 769px) {
+        grid-column: 3;
+        grid-row: 2;
+        justify-self: end;
     }
 }
 
