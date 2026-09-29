@@ -22,4 +22,5 @@ export interface Album {
     preview_song_name?: string;
     comments?: FanComment[];
     hidden?: boolean;
+    isPlaceholder?: boolean;
 }

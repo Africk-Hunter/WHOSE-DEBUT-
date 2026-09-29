@@ -17,6 +17,7 @@ import {
 import { trimAudioToWav, AudioProcessingError } from '../utilities/audio/trimAudioToWav';
 import { fetchAllGenres, seedGenresIfEmpty, getOrCreateGenre } from '../utilities/database/genreInteractions';
 import { previewGenreMigration, runGenreMigration, MigrationReport } from '../utilities/database/migrateGenres';
+import { fetchPlaceholderSettings, savePlaceholderSettings, PlaceholderSettings, DEFAULT_PLACEHOLDER_SETTINGS } from '../utilities/database/placeholderSettings';
 import { GenreEntry, SEED_GENRES, albumGenres } from '../utilities/genres';
 import { Album, FanComment } from '../utilities/types';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
@@ -52,7 +53,7 @@ const emptyAlbumForm: AlbumFormData = {
     previewSongName: '',
 };
 
-type Tab = 'add' | 'manage' | 'comments' | 'migration';
+type Tab = 'add' | 'manage' | 'comments' | 'placeholders' | 'migration';
 
 interface AlbumFormFieldsProps {
     formData: AlbumFormData;
@@ -281,6 +282,13 @@ const AdminDashboard: React.FC = () => {
     const [migrationReport, setMigrationReport] = useState<MigrationReport | null>(null);
     const [migrationResult, setMigrationResult] = useState<{ converted: number } | null>(null);
 
+    // --- Placeholders tab state ---
+    const [placeholderSettings, setPlaceholderSettings] = useState<PlaceholderSettings>(DEFAULT_PLACEHOLDER_SETTINGS);
+    const [placeholderSettingsLoaded, setPlaceholderSettingsLoaded] = useState(false);
+    const [placeholderImageFile, setPlaceholderImageFile] = useState<File | null>(null);
+    const [placeholderImagePreviewUrl, setPlaceholderImagePreviewUrl] = useState<string | null>(null);
+    const [isSavingPlaceholders, setIsSavingPlaceholders] = useState(false);
+
     useEffect(() => {
         if (!authChecked) return;
         const initGenres = async () => {
@@ -307,6 +315,15 @@ const AdminDashboard: React.FC = () => {
     }, [authChecked, activeTab, albumsLoaded]);
 
     useEffect(() => {
+        if (!authChecked || placeholderSettingsLoaded || activeTab !== 'placeholders') return;
+        const loadPlaceholderSettings = async () => {
+            setPlaceholderSettings(await fetchPlaceholderSettings());
+            setPlaceholderSettingsLoaded(true);
+        };
+        loadPlaceholderSettings();
+    }, [authChecked, activeTab, placeholderSettingsLoaded]);
+
+    useEffect(() => {
         if (!imageFile) {
             setImagePreviewUrl(null);
             return;
@@ -325,6 +342,16 @@ const AdminDashboard: React.FC = () => {
         setEditImagePreviewUrl(objectUrl);
         return () => URL.revokeObjectURL(objectUrl);
     }, [editImageFile]);
+
+    useEffect(() => {
+        if (!placeholderImageFile) {
+            setPlaceholderImagePreviewUrl(null);
+            return;
+        }
+        const objectUrl = URL.createObjectURL(placeholderImageFile);
+        setPlaceholderImagePreviewUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [placeholderImageFile]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -616,6 +643,35 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    // --- Placeholders tab handlers ---
+    const handlePlaceholderFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setPlaceholderImageFile(e.target.files[0]);
+        }
+    };
+
+    const handleSavePlaceholderSettings = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        let imageUrl = placeholderSettings.image_url;
+        if (placeholderImageFile) {
+            const fileExt = placeholderImageFile.name.split('.').pop();
+            const fileName = `placeholder-cover-${Date.now()}.${fileExt}`;
+            imageUrl = await uploadCoverToCloudinary(fileName, placeholderImageFile);
+        }
+
+        const updated: PlaceholderSettings = { ...placeholderSettings, image_url: imageUrl };
+        setIsSavingPlaceholders(true);
+        const success = await savePlaceholderSettings(updated);
+        setIsSavingPlaceholders(false);
+
+        if (success) {
+            setPlaceholderSettings(updated);
+            setPlaceholderImageFile(null);
+            alert('Placeholder settings saved');
+        }
+    };
+
     const handlePreviewMigration = async () => {
         setMigrationResult(null);
         setMigrationReport(await previewGenreMigration());
@@ -671,6 +727,13 @@ const AdminDashboard: React.FC = () => {
                     onClick={() => setActiveTab('comments')}
                 >
                     Comments
+                </button>
+                <button
+                    type="button"
+                    className={`adminTab ${activeTab === 'placeholders' ? 'adminTab--active' : ''}`}
+                    onClick={() => setActiveTab('placeholders')}
+                >
+                    Placeholders
                 </button>
                 <button
                     type="button"
@@ -860,6 +923,101 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             </form>
                         </>
+                    )}
+                </section>
+            )}
+
+            {activeTab === 'placeholders' && (
+                <section className="albumAdd">
+                    <h2>Placeholder Albums</h2>
+                    <p className="formHint">
+                        When there aren&rsquo;t enough real albums to fill the home page (Top 3 + Still Fresh,
+                        13 cards total), these fill the empty slots so visitors can see what a full page looks
+                        like. They&rsquo;re never clickable and never show up in the Archive.
+                    </p>
+                    {!placeholderSettingsLoaded ? (
+                        <p className="formHint">Loading&hellip;</p>
+                    ) : (
+                        <form onSubmit={handleSavePlaceholderSettings} className="albumForm">
+                            <div className="formSection">
+                                <div className="formGroup">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={placeholderSettings.enabled}
+                                            onChange={e =>
+                                                setPlaceholderSettings(prev => ({ ...prev, enabled: e.target.checked }))
+                                            }
+                                        />
+                                        {' '}Show placeholder albums
+                                    </label>
+                                </div>
+                                <div className="formGroup">
+                                    <label htmlFor="placeholderCount">How many (0&ndash;13)</label>
+                                    <input
+                                        type="number"
+                                        id="placeholderCount"
+                                        min={0}
+                                        max={13}
+                                        value={placeholderSettings.count}
+                                        onChange={e =>
+                                            setPlaceholderSettings(prev => ({
+                                                ...prev,
+                                                count: Math.max(0, Math.min(13, Number(e.target.value) || 0)),
+                                            }))
+                                        }
+                                    />
+                                </div>
+                                <div className="formRow">
+                                    <div className="formGroup">
+                                        <label htmlFor="placeholderTitle">Title</label>
+                                        <input
+                                            type="text"
+                                            id="placeholderTitle"
+                                            value={placeholderSettings.title}
+                                            onChange={e =>
+                                                setPlaceholderSettings(prev => ({ ...prev, title: e.target.value }))
+                                            }
+                                        />
+                                    </div>
+                                    <div className="formGroup">
+                                        <label htmlFor="placeholderArtist">Artist</label>
+                                        <input
+                                            type="text"
+                                            id="placeholderArtist"
+                                            value={placeholderSettings.artist}
+                                            onChange={e =>
+                                                setPlaceholderSettings(prev => ({ ...prev, artist: e.target.value }))
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                                <div className="formGroup">
+                                    <label htmlFor="placeholderImage">Cover Image</label>
+                                    <input
+                                        type="file"
+                                        id="placeholderImage"
+                                        accept="image/*"
+                                        onChange={handlePlaceholderFileChange}
+                                    />
+                                    {(placeholderImagePreviewUrl || placeholderSettings.image_url) && (
+                                        <img
+                                            src={
+                                                placeholderImagePreviewUrl ||
+                                                optimizeCloudinaryUrl(placeholderSettings.image_url, 320)
+                                            }
+                                            alt="Placeholder cover preview"
+                                            className="coverPreview"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                            <div className="submitRow">
+                                <button type="submit" className="adminButton" disabled={isSavingPlaceholders}>
+                                    {isSavingPlaceholders ? 'Saving…' : 'Save Placeholder Settings'}
+                                </button>
+                            </div>
+                        </form>
                     )}
                 </section>
             )}

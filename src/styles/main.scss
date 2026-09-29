@@ -196,6 +196,41 @@
     text-transform: uppercase;
 }
 
+.placeholderBadge {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    padding: 5px 10px;
+    background: $ink;
+    color: $background-color;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .875rem;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
+.album--placeholder {
+    .albumImgHolder {
+        background: repeating-linear-gradient(
+            135deg,
+            rgba(0, 0, 0, .04),
+            rgba(0, 0, 0, .04) 10px,
+            transparent 10px,
+            transparent 20px
+        );
+        border-style: dashed;
+    }
+
+    .albumTitle, .artistName { opacity: .6; }
+
+    @media (hover: hover) {
+        &:hover {
+            transform: none;
+            cursor: default;
+        }
+    }
+}
+
 // Smaller album variant for still fresh section
 .album--small {
     .albumImgHolder { height: 166px; width: 166px; }
