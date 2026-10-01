@@ -708,6 +708,55 @@ $mb-gutter: 20px;
     color: $mb-muted;
   }
 
+  // ── submission ─────────────────────────────────────────────────────────────
+  .submissionContent {
+    gap: 18px;
+    padding: 18px $mb-gutter 24px $mb-gutter;
+  }
+
+  .submissionIntro, .submissionThanks {
+    font-size: 1rem;
+    line-height: 1.55;
+    color: $mb-ink-soft;
+  }
+
+  .submissionThanksTitle { font-size: 2rem; }
+
+  .submissionForm { gap: 20px; }
+
+  .submissionLabel { font-size: 1.125rem; }
+
+  .submissionHint, .submissionError { font-size: .875rem; }
+
+  // matches the mobile .formInput frame below (square corners, 48px)
+  .submissionPage .formInput {
+    height: 48px;
+    padding: 0 12px;
+    border-radius: 0;
+    font-size: 1rem;      // 16px — anything smaller triggers iOS zoom on focus
+  }
+
+  .submissionPage .submissionTextarea {
+    height: 180px;
+    padding: 11px 12px;
+  }
+
+  .submissionFile {
+    min-height: 48px;
+    border-radius: 0;
+    font-size: 1rem;
+  }
+
+  .submissionCover { width: 140px; }
+
+  .submissionCheckbox { font-size: 1rem; }
+
+  .submissionPage .submissionHomeButton {
+    align-self: stretch;
+    height: 52px;
+    font-size: 1.1875rem;
+  }
+
   // ── 05 · about + contact ───────────────────────────────────────────────────
   .about { min-height: 100vh;
   gap: 0rem; }

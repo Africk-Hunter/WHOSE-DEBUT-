@@ -81,26 +81,30 @@ async function uploadPreviewAudioToCloudinary(fileName: string, audioBlob: Blob)
     return data.secure_url;
 }
 
+function buildNewAlbumDoc(albumData: AlbumData, imageUrl: string, previewAudioUrl?: string): Record<string, unknown> {
+    const albumDoc: Record<string, unknown> = {
+        name: albumData.title,
+        artist: albumData.artist,
+        year_released: albumData.releaseDate,
+        artist_review: albumData.description,
+        from_a_peer: albumData.fromafan,
+        genres: albumData.genres,
+        spotify: albumData.spotify,
+        apple: albumData.apple,
+        bandcamp: albumData.bandcamp,
+        amazon: albumData.amazon,
+        image_url: imageUrl,
+    };
+    if (previewAudioUrl) {
+        albumDoc.preview_audio_url = previewAudioUrl;
+        albumDoc.preview_song_name = albumData.previewSongName;
+    }
+    return albumDoc;
+}
+
 async function submitAlbumToFirebase(albumData: AlbumData, imageUrl: string, previewAudioUrl?: string): Promise<boolean> {
     try {
-        const albumDoc: Record<string, unknown> = {
-            name: albumData.title,
-            artist: albumData.artist,
-            year_released: albumData.releaseDate,
-            artist_review: albumData.description,
-            from_a_peer: albumData.fromafan,
-            genres: albumData.genres,
-            spotify: albumData.spotify,
-            apple: albumData.apple,
-            bandcamp: albumData.bandcamp,
-            amazon: albumData.amazon,
-            image_url: imageUrl,
-        };
-        if (previewAudioUrl) {
-            albumDoc.preview_audio_url = previewAudioUrl;
-            albumDoc.preview_song_name = albumData.previewSongName;
-        }
-        await addDoc(collection(db, 'albums'), albumDoc);
+        await addDoc(collection(db, 'albums'), buildNewAlbumDoc(albumData, imageUrl, previewAudioUrl));
         alert('Album added successfully');
         return true;
     } catch (error) {
@@ -238,6 +242,8 @@ async function seedTestAlbums(): Promise<void> {
     }
 }
 
+export type { AlbumData };
+
 export {
     loadAlbumsFromDatabase,
     fetchAllAlbumsFromFirebase,
@@ -250,4 +256,5 @@ export {
     updateAlbumHidden,
     seedTestAlbums,
     buildAlbumUpdatePayload,
+    buildNewAlbumDoc,
 };

@@ -64,6 +64,10 @@ Two separate, non-overlapping mechanisms share the "fan feedback" idea:
 - `artist_review` and the legacy `from_a_peer` field are admin-authored/curated text set from the admin dashboard's Add/Manage form. `from_a_peer` is still written but no longer rendered anywhere in the UI.
 - The **Fan Notes** UI on `AlbumView` (`FanNoteForm.tsx`) is fan-facing but has no moderation backend: a submission is validated client-side ([src/utilities/fanNotes.ts](src/utilities/fanNotes.ts)) and emailed straight to Hunter via its own EmailJS template (`VITE_EMAILJS_FAN_NOTE_TEMPLATE_ID`) — it never touches Firestore directly. A `wd.fanNoteSent.{albumId}` localStorage flag prevents re-showing the form after a successful send. Hunter reads the email and, if he wants it published, manually adds it as a `FanComment` (`{ id, name, text }`) via the admin dashboard's "Comments" tab, which calls `updateAlbumComments` to write the `comments` array on that album's Firestore doc. `AlbumView` renders `album.comments` (HTML-escaped via `formatReviewText`, which allows a small tag whitelist) as the visible "Fan Notes" list.
 
+### Artist Submissions
+
+`/submission` ([src/pages/submission.tsx](src/pages/submission.tsx)) is validated client-side by `validateSubmission` ([src/utilities/submissions.ts](src/utilities/submissions.ts)), uploads the cover (and optional *untrimmed* audio) via the same unsigned Cloudinary presets as the admin flow, then calls `createSubmission`. A hidden honeypot input silently drops bot submissions. The admin dashboard's "Submissions" tab lists them by status; "Review" loads the submission into the shared `AlbumFormFields`, fetches the submitted audio back into `AudioClipSelector` so the 30s window is chosen at publish time, and "Publish" calls `publishSubmissionAsAlbum` ([src/utilities/database/submissionInteractions.ts](src/utilities/database/submissionInteractions.ts)), which creates the album (optionally `hidden: true`, checked by default) and marks the submission `published`.
+
 ### Firebase Structure
 
 **Firestore collection: `albums`**
@@ -82,6 +86,8 @@ Two separate, non-overlapping mechanisms share the "fan feedback" idea:
 | `comments` | Optional `FanComment[]` (`{ id, name, text }`), admin-moderated, rendered as "Fan Notes" on `AlbumView` |
 | `hidden` | Optional boolean, toggled from the admin dashboard's "Manage Albums" tab. Hidden albums are filtered out of `loadAlbumsFromDatabase`'s localStorage write, so they never appear on the home page, Still Fresh, or Archive, but remain in Firestore and stay editable from Manage Albums |
 
+**Firestore collection: `submissions`** — public artist submissions from `/submission`. Same field names as `albums` where they overlap (`name`, `artist`, `year_released`, `genres`, `artist_review`, streaming links, `image_url`, `preview_audio_url`, `preview_song_name`), plus `contact_email`, `suggested_genres` (free text), `other_links`, `status` (`pending` | `published` | `rejected`), `submitted_at` (server timestamp), and `published_album_id` once published. Firestore rules must allow unauthenticated `create` only; read/update/delete are admin-only.
+
 **Firestore collection: `genres`** — doc ID is the slug; `{ label: string }` is the only field. See Genre System above.
 
 **Image hosting: Cloudinary** — album covers are uploaded via unsigned upload to Cloudinary. `public_id` follows the pattern `Artist_Name-Album_Title-{timestamp}`. The returned `secure_url` is stored as `image_url` in Firestore. Configure via `VITE_CLOUDINARY_CLOUD_NAME` and `VITE_CLOUDINARY_UPLOAD_PRESET` (preset must be set to "unsigned" in the Cloudinary dashboard). [src/utilities/cloudinary.ts](src/utilities/cloudinary.ts)'s `optimizeCloudinaryUrl()` rewrites any Cloudinary URL to add `f_auto,q_auto,w_{width},c_limit` before display.
@@ -99,6 +105,7 @@ Two separate, non-overlapping mechanisms share the "fan feedback" idea:
 | `/` | `Main` | Three scroll-snap sections (top 3, "Still Fresh" 4–13, Archive all) |
 | `/album/:albumId` | `Main` | Same component as `/`; renders `AlbumView` as an overlay when the route param is present, falling back to `selectedID` in localStorage |
 | `/about` | `About` | Platform description + `Contact` (EmailJS contact form) |
+| `/submission` | `Submission` | Public release-submission form; writes to the `submissions` collection (see Artist Submissions) |
 | `/admin` | `AdminPanel` | Firebase email/password login |
 | `/admin/dashboard` | `AdminDashboard` | Protected; tabs for adding/editing/deleting albums, genre migration, and comment moderation |
 

@@ -17,7 +17,7 @@ const About: React.FC = () => {
                     With every new release, an artist debuts a new version of themself to the world. WHOSE DEBUT? is a platform made for them to be seen.
                     
                     <br></br><br></br>The mission of WHOSEDEBUT? is to help artists in the Reno area share their new releases and connect with local fans (No, it doesn't have to be a first album!!). In a world where an over-saturated streaming market makes it nearly impossible to get noticed, WHOSE DEBUT? aims to tap into the potential exposure that the Reno community can provide.
-                    <br></br><br></br>Want to get involved? Fill out the form fields and I’ll get in contact with you soon!
+                    <br></br><br></br>Have a release you want featured? <a href="/submission">Submit it here</a>. Just want to say hi? Fill out the form fields and I’ll get in contact with you soon!
 
                     <div className="hunter">
                         - Hunter

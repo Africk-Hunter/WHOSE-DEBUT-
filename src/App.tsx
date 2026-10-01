@@ -8,6 +8,7 @@ import usePageTracking from './hooks/usePageTracking';
 const AdminPanel = lazy(() => import('./pages/admin'));
 const AdminDashboard = lazy(() => import('./pages/adminDashboard'));
 const About = lazy(() => import('./pages/about'));
+const Submission = lazy(() => import('./pages/submission'));
 
 function App() {
   usePageTracking();
@@ -38,6 +39,14 @@ function App() {
           element={
             <Suspense fallback={<LoadingScreen />}>
               <About />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/submission"
+          element={
+            <Suspense fallback={<LoadingScreen />}>
+              <Submission />
             </Suspense>
           }
         />

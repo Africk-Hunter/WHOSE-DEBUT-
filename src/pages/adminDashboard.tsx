@@ -18,7 +18,14 @@ import { trimAudioToWav, AudioProcessingError } from '../utilities/audio/trimAud
 import { fetchAllGenres, seedGenresIfEmpty, getOrCreateGenre } from '../utilities/database/genreInteractions';
 import { previewGenreMigration, runGenreMigration, MigrationReport } from '../utilities/database/migrateGenres';
 import { GenreEntry, SEED_GENRES, albumGenres } from '../utilities/genres';
-import { Album, FanComment } from '../utilities/types';
+import {
+    fetchAllSubmissions,
+    updateSubmission,
+    setSubmissionStatus,
+    deleteSubmission,
+    publishSubmissionAsAlbum,
+} from '../utilities/database/submissionInteractions';
+import { Album, FanComment, Submission, SubmissionStatus } from '../utilities/types';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 import LoadingScreen from '../components/LoadingScreen';
 import AudioClipSelector from '../components/AudioClipSelector';
@@ -52,7 +59,8 @@ const emptyAlbumForm: AlbumFormData = {
     previewSongName: '',
 };
 
-type Tab = 'add' | 'manage' | 'comments' | 'migration';
+type Tab = 'add' | 'manage' | 'submissions' | 'comments' | 'migration';
+type SubmissionFilter = SubmissionStatus | 'all';
 
 interface AlbumFormFieldsProps {
     formData: AlbumFormData;
@@ -278,6 +286,24 @@ const AdminDashboard: React.FC = () => {
     const [newCommentText, setNewCommentText] = useState('');
     const [isSavingComment, setIsSavingComment] = useState(false);
 
+    // --- Submissions tab state ---
+    const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [submissionsLoading, setSubmissionsLoading] = useState(false);
+    const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
+    const [submissionFilter, setSubmissionFilter] = useState<SubmissionFilter>('pending');
+    const [reviewing, setReviewing] = useState<Submission | null>(null);
+    const [reviewFormData, setReviewFormData] = useState<AlbumFormData>(emptyAlbumForm);
+    const [reviewImageFile, setReviewImageFile] = useState<File | null>(null);
+    const [reviewImagePreviewUrl, setReviewImagePreviewUrl] = useState<string | null>(null);
+    const [reviewAudioFile, setReviewAudioFile] = useState<File | null>(null);
+    const [reviewAudioLoading, setReviewAudioLoading] = useState(false);
+    const [reviewAudioStartSeconds, setReviewAudioStartSeconds] = useState(0);
+    const [reviewIsProcessingAudio, setReviewIsProcessingAudio] = useState(false);
+    const [reviewNewGenreLabel, setReviewNewGenreLabel] = useState('');
+    const [publishHidden, setPublishHidden] = useState(true);
+    const [isSavingReview, setIsSavingReview] = useState(false);
+    const reviewDecodedAudioBufferRef = useRef<AudioBuffer | null>(null);
+
     const [migrationReport, setMigrationReport] = useState<MigrationReport | null>(null);
     const [migrationResult, setMigrationResult] = useState<{ converted: number } | null>(null);
 
@@ -305,6 +331,33 @@ const AdminDashboard: React.FC = () => {
         loadAlbumsList();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authChecked, activeTab, albumsLoaded]);
+
+    const loadSubmissionsList = async () => {
+        setSubmissionsLoading(true);
+        try {
+            setSubmissions(await fetchAllSubmissions());
+            setSubmissionsLoaded(true);
+        } catch (error) {
+            logError('Error loading submissions:', error);
+            alert('Failed to load submissions: ' + error);
+        }
+        setSubmissionsLoading(false);
+    };
+
+    useEffect(() => {
+        if (!authChecked || submissionsLoaded || activeTab !== 'submissions') return;
+        loadSubmissionsList();
+    },[authChecked, activeTab, submissionsLoaded]);
+
+    useEffect(() => {
+        if (!reviewImageFile) {
+            setReviewImagePreviewUrl(null);
+            return;
+        }
+        const objectUrl = URL.createObjectURL(reviewImageFile);
+        setReviewImagePreviewUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [reviewImageFile]);
 
     useEffect(() => {
         if (!imageFile) {
@@ -563,6 +616,225 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    // --- Submissions tab handlers ---
+    const addGenreToForm = (prev: AlbumFormData, slug: string): AlbumFormData => {
+        if (prev.genres.includes(slug)) return prev;
+        if (prev.genres.length >= 3) {
+            alert('You can select up to 3 genres. Remove one first.');
+            return prev;
+        }
+        return { ...prev, genres: [...prev.genres, slug] };
+    };
+
+    const toggleReviewGenre = (slug: string) => {
+        setReviewFormData(prev =>
+            prev.genres.includes(slug) ? { ...prev, genres: prev.genres.filter(g => g !== slug) } : addGenreToForm(prev, slug)
+        );
+    };
+
+    const handleReviewAddGenre = async () => {
+        const label = reviewNewGenreLabel.trim();
+        if (!label) return;
+        const entry = await getOrCreateGenre(label);
+        setAvailableGenres(prev => (prev.some(g => g.slug === entry.slug) ? prev : [...prev, entry]));
+        setReviewNewGenreLabel('');
+        setReviewFormData(prev => addGenreToForm(prev, entry.slug));
+    };
+
+    const handleReviewInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setReviewFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleReviewAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setReviewAudioFile(e.target.files[0]);
+            setReviewAudioStartSeconds(0);
+            reviewDecodedAudioBufferRef.current = null;
+        }
+    };
+
+    // The submitter's audio is uploaded untrimmed, so pull it back down into
+    // the clip selector — the 30s window is chosen here, at publish time.
+    const loadSubmissionAudio = async (submission: Submission) => {
+        if (!submission.preview_audio_url) return;
+        setReviewAudioLoading(true);
+        try {
+            const res = await fetch(submission.preview_audio_url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const blob = await res.blob();
+            setReviewAudioFile(new File([blob], 'submission-audio', { type: blob.type || 'audio/mpeg' }));
+        } catch (error) {
+            logError('Error loading submission audio:', error);
+            alert('Could not load the submitted audio. You can upload a file manually instead.');
+        }
+        setReviewAudioLoading(false);
+    };
+
+    const startReview = (submission: Submission) => {
+        setReviewing(submission);
+        setReviewFormData({
+            title: submission.name ?? '',
+            artist: submission.artist ?? '',
+            releaseDate: submission.year_released ?? '',
+            genres: albumGenres(submission),
+            description: submission.artist_review ?? '',
+            fromafan: '',
+            spotify: submission.spotify ?? '',
+            apple: submission.apple ?? '',
+            bandcamp: submission.bandcamp ?? '',
+            amazon: submission.amazon ?? '',
+            previewSongName: submission.preview_song_name ?? '',
+        });
+        setReviewImageFile(null);
+        setReviewAudioFile(null);
+        setReviewAudioStartSeconds(0);
+        reviewDecodedAudioBufferRef.current = null;
+        setReviewNewGenreLabel('');
+        setPublishHidden(true);
+        if (submission.status !== 'published') loadSubmissionAudio(submission);
+    };
+
+    const closeReview = () => {
+        setReviewing(null);
+        setReviewImageFile(null);
+        setReviewAudioFile(null);
+        setReviewAudioStartSeconds(0);
+    };
+
+    const patchSubmission = (id: string, updates: Partial<Submission>) => {
+        setSubmissions(prev => prev.map(s => (s.id === id ? { ...s, ...updates } : s)));
+    };
+
+    // '' = no new cover chosen, null = upload failed (already alerted).
+    const uploadReviewCover = async (): Promise<string | null> => {
+        if (!reviewImageFile) return '';
+        const fileExt = reviewImageFile.name.split('.').pop();
+        const fileName = `${reviewFormData.artist.replace(/\s+/g, '_')}-${reviewFormData.title.replace(/\s+/g, '_')}-${Date.now()}.${fileExt}`;
+        const url = await uploadCoverToCloudinary(fileName, reviewImageFile);
+        return url || null;
+    };
+
+    const handleSaveReview = async () => {
+        if (!reviewing) return;
+        setIsSavingReview(true);
+        const newImageUrl = await uploadReviewCover();
+        if (newImageUrl === null) {
+            setIsSavingReview(false);
+            return;
+        }
+        const updates: Partial<Submission> = {
+            name: reviewFormData.title,
+            artist: reviewFormData.artist,
+            year_released: reviewFormData.releaseDate,
+            genres: reviewFormData.genres,
+            artist_review: reviewFormData.description,
+            spotify: reviewFormData.spotify,
+            apple: reviewFormData.apple,
+            bandcamp: reviewFormData.bandcamp,
+            amazon: reviewFormData.amazon,
+            preview_song_name: reviewFormData.previewSongName,
+            ...(newImageUrl ? { image_url: newImageUrl } : {}),
+        };
+        const success = await updateSubmission(reviewing.id, updates);
+        setIsSavingReview(false);
+        if (success) {
+            patchSubmission(reviewing.id, updates);
+            setReviewing(prev => (prev ? { ...prev, ...updates } : prev));
+            setReviewImageFile(null);
+            alert('Submission saved');
+        }
+    };
+
+    const handlePublishSubmission = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!reviewing) return;
+        if (reviewing.status === 'published') {
+            alert('This submission has already been published.');
+            return;
+        }
+        if (reviewFormData.genres.length === 0) {
+            alert('Select at least one genre.');
+            return;
+        }
+        if (reviewing.preview_audio_url && !reviewAudioFile) {
+            const proceed = window.confirm('The submitted audio is not loaded, so the album will publish without a preview. Continue?');
+            if (!proceed) return;
+        }
+
+        setIsSavingReview(true);
+        const newImageUrl = await uploadReviewCover();
+        if (newImageUrl === null) {
+            setIsSavingReview(false);
+            return;
+        }
+        const imageUrl = newImageUrl || reviewing.image_url;
+
+        let previewAudioUrl = '';
+        if (reviewAudioFile) {
+            setReviewIsProcessingAudio(true);
+            try {
+                const trimmedWav = await trimAudioToWav(
+                    reviewAudioFile,
+                    30,
+                    reviewAudioStartSeconds,
+                    reviewDecodedAudioBufferRef.current ?? undefined
+                );
+                const audioFileName = `${reviewFormData.artist.replace(/\s+/g, '_')}-${reviewFormData.title.replace(/\s+/g, '_')}-${Date.now()}-preview.wav`;
+                previewAudioUrl = await uploadPreviewAudioToCloudinary(audioFileName, trimmedWav);
+            } catch (error) {
+                if (error instanceof AudioProcessingError) {
+                    alert(error.message);
+                } else {
+                    logError('Error processing preview audio:', error);
+                    alert('Failed to process preview audio.');
+                }
+                setReviewIsProcessingAudio(false);
+                setIsSavingReview(false);
+                return;
+            }
+            setReviewIsProcessingAudio(false);
+        }
+
+        const albumId = await publishSubmissionAsAlbum(
+            reviewing.id,
+            reviewFormData,
+            imageUrl,
+            previewAudioUrl || undefined,
+            publishHidden
+        );
+        setIsSavingReview(false);
+
+        if (albumId) {
+            patchSubmission(reviewing.id, { status: 'published', published_album_id: albumId });
+            // Manage/Comments tabs cache the album list — invalidate it so the
+            // new album shows up next time either tab is opened.
+            setAlbumsLoaded(false);
+            alert(publishHidden ? 'Published as a hidden album. Unhide it from Manage Albums when ready.' : 'Album published!');
+            closeReview();
+        }
+    };
+
+    const handleSetSubmissionStatus = async (submission: Submission, status: SubmissionStatus) => {
+        if (await setSubmissionStatus(submission.id, status)) {
+            patchSubmission(submission.id, { status });
+            if (reviewing?.id === submission.id) closeReview();
+        }
+    };
+
+    const handleDeleteSubmission = async (submission: Submission) => {
+        const confirmed = window.confirm(`Delete the submission "${submission.name}" by ${submission.artist}? This cannot be undone.`);
+        if (!confirmed) return;
+        if (await deleteSubmission(submission.id)) {
+            if (reviewing?.id === submission.id) closeReview();
+            setSubmissions(prev => prev.filter(s => s.id !== submission.id));
+        }
+    };
+
+    const visibleSubmissions =
+        submissionFilter === 'all' ? submissions : submissions.filter(s => (s.status ?? 'pending') === submissionFilter);
+    const pendingCount = submissions.filter(s => (s.status ?? 'pending') === 'pending').length;
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -664,6 +936,13 @@ const AdminDashboard: React.FC = () => {
                     onClick={() => setActiveTab('manage')}
                 >
                     Manage Albums
+                </button>
+                <button
+                    type="button"
+                    className={`adminTab ${activeTab === 'submissions' ? 'adminTab--active' : ''}`}
+                    onClick={() => setActiveTab('submissions')}
+                >
+                    Submissions{pendingCount > 0 ? ` (${pendingCount})` : ''}
                 </button>
                 <button
                     type="button"
@@ -782,6 +1061,149 @@ const AdminDashboard: React.FC = () => {
                                         </div>
                                     </li>
                                 ))}
+                            </ul>
+                        </>
+                    )}
+                </section>
+            )}
+
+            {activeTab === 'submissions' && (
+                <section className="albumAdd">
+                    {reviewing ? (
+                        <>
+                            <h2>Review Submission</h2>
+                            <div className="submissionMeta">
+                                <p>
+                                    <strong>Contact:</strong>{' '}
+                                    <a href={`mailto:${reviewing.contact_email}`}>{reviewing.contact_email}</a>
+                                </p>
+                                {reviewing.submitted_at && (
+                                    <p><strong>Submitted:</strong> {new Date(reviewing.submitted_at).toLocaleString()}</p>
+                                )}
+                                {reviewing.suggested_genres && (
+                                    <p><strong>Suggested genres:</strong> {reviewing.suggested_genres}</p>
+                                )}
+                                {reviewing.unreleased && (
+                                    <p><strong>Unreleased:</strong> the artist has no streaming links yet.</p>
+                                )}
+                                {reviewing.other_links && (
+                                    <p className="submissionMetaLinks"><strong>Other links:</strong> {reviewing.other_links}</p>
+                                )}
+                                {reviewing.status === 'published' && (
+                                    <p><strong>Already published</strong> (album id {reviewing.published_album_id}).</p>
+                                )}
+                            </div>
+                            <form onSubmit={handlePublishSubmission} className="albumForm">
+                                <AlbumFormFields
+                                    formData={reviewFormData}
+                                    onInputChange={handleReviewInputChange}
+                                    availableGenres={availableGenres}
+                                    newGenreLabel={reviewNewGenreLabel}
+                                    onNewGenreLabelChange={setReviewNewGenreLabel}
+                                    onAddGenre={handleReviewAddGenre}
+                                    onToggleGenre={toggleReviewGenre}
+                                    onFileChange={e => setReviewImageFile(e.target.files?.[0] ?? null)}
+                                    imagePreviewUrl={reviewImagePreviewUrl}
+                                    existingImageUrl={reviewing.image_url}
+                                    onAudioFileChange={handleReviewAudioFileChange}
+                                    audioFile={reviewAudioFile}
+                                    audioStartSeconds={reviewAudioStartSeconds}
+                                    onAudioStartSecondsChange={setReviewAudioStartSeconds}
+                                    onAudioError={(message) => alert(message)}
+                                    onAudioDecoded={(buffer) => { reviewDecodedAudioBufferRef.current = buffer; }}
+                                    existingAudioUrl={reviewing.preview_audio_url}
+                                    isProcessingAudio={reviewIsProcessingAudio}
+                                />
+                                {reviewAudioLoading && <p className="formHint">Loading submitted audio&hellip;</p>}
+                                <label className="publishHiddenToggle">
+                                    <input
+                                        type="checkbox"
+                                        checked={publishHidden}
+                                        onChange={e => setPublishHidden(e.target.checked)}
+                                    />
+                                    Hide album when published (unhide later from Manage Albums)
+                                </label>
+                                <div className="submitRow">
+                                    <button type="button" className="adminButton" onClick={closeReview}>
+                                        Back
+                                    </button>
+                                    <button type="button" className="adminButton" onClick={handleSaveReview} disabled={isSavingReview}>
+                                        Save Edits
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="adminButton"
+                                        disabled={isSavingReview || reviewIsProcessingAudio || reviewAudioLoading || reviewing.status === 'published'}
+                                    >
+                                        {isSavingReview ? 'Working…' : publishHidden ? 'Publish (Hidden)' : 'Publish'}
+                                    </button>
+                                </div>
+                            </form>
+                        </>
+                    ) : (
+                        <>
+                            <div className="albumListHeader">
+                                <h2>Submissions</h2>
+                                <button type="button" className="adminButton" onClick={loadSubmissionsList} disabled={submissionsLoading}>
+                                    Refresh
+                                </button>
+                            </div>
+                            <div className="submissionFilters">
+                                {(['pending', 'published', 'rejected', 'all'] as SubmissionFilter[]).map(f => (
+                                    <button
+                                        type="button"
+                                        key={f}
+                                        className={`genreChip ${submissionFilter === f ? 'genreChip--active' : ''}`}
+                                        aria-pressed={submissionFilter === f}
+                                        onClick={() => setSubmissionFilter(f)}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                            {submissionsLoading && <p className="formHint">Loading submissions&hellip;</p>}
+                            {!submissionsLoading && visibleSubmissions.length === 0 && (
+                                <p className="formHint">No submissions here.</p>
+                            )}
+                            <ul className="albumList">
+                                {visibleSubmissions.map(submission => {
+                                    const status = submission.status ?? 'pending';
+                                    return (
+                                        <li key={submission.id} className="albumListItem">
+                                            {submission.image_url && (
+                                                <img src={optimizeCloudinaryUrl(submission.image_url, 120)} alt="" className="albumListThumb" />
+                                            )}
+                                            <div className="albumListInfo">
+                                                <p className="albumListTitle">
+                                                    {submission.name}
+                                                    {status !== 'pending' && <span className="hiddenBadge">{status}</span>}
+                                                </p>
+                                                <p className="albumListMeta">
+                                                    {submission.artist} &middot; {submission.year_released}
+                                                    {submission.submitted_at && <> &middot; sent {new Date(submission.submitted_at).toLocaleDateString()}</>}
+                                                </p>
+                                            </div>
+                                            <div className="albumListActions">
+                                                <button type="button" className="adminButton" onClick={() => startReview(submission)}>
+                                                    {status === 'published' ? 'View' : 'Review'}
+                                                </button>
+                                                {status === 'pending' && (
+                                                    <button type="button" className="adminButton" onClick={() => handleSetSubmissionStatus(submission, 'rejected')}>
+                                                        Reject
+                                                    </button>
+                                                )}
+                                                {status === 'rejected' && (
+                                                    <button type="button" className="adminButton" onClick={() => handleSetSubmissionStatus(submission, 'pending')}>
+                                                        Reopen
+                                                    </button>
+                                                )}
+                                                <button type="button" className="adminButton adminButton--danger" onClick={() => handleDeleteSubmission(submission)}>
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </>
                     )}

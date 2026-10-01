@@ -1,0 +1,233 @@
+@use './variables' as *;
+
+.submissionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    max-width: 880px;
+    padding: 3rem 3.5rem;
+}
+
+.submissionIntro {
+    font-size: 1.5rem;
+    line-height: 1.5;
+    color: $ink-soft;
+}
+
+.submissionForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.submissionRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+
+    @media (max-width: 1024px) { grid-template-columns: 1fr; }
+}
+
+.submissionField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.submissionLabel {
+    font-size: 1.375rem;
+    color: $ink;
+}
+
+.submissionHint {
+    font-size: 1rem;
+    color: $muted;
+}
+
+.submissionCount {
+    align-self: flex-end;
+}
+
+.submissionError {
+    font-size: 1rem;
+    color: $danger-color;
+}
+
+.submissionPage .formInput {
+    box-sizing: border-box;
+    height: 3.5rem;
+    padding: 0 0.75rem;
+    border: 3px solid $ink;
+    border-radius: 0;
+    background: $background-color;
+    font-size: 1.25rem;
+    color: $ink;
+    cursor: text;
+
+    &::placeholder { color: $muted; }
+    &:focus-visible { outline: 3px solid $ink-soft; outline-offset: 2px; }
+}
+
+.submissionPage .submissionTextarea {
+    height: 14rem;
+    padding: 0.75rem;
+    line-height: 1.4;
+    resize: vertical;
+}
+
+.submissionPage .formInput:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.submissionCheckbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    align-self: flex-start;
+    font-size: 1.25rem;
+    color: $ink;
+    cursor: pointer;
+
+    input {
+        appearance: none;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin: 0;
+        border: 3px solid $ink;
+        background: $background-color;
+        cursor: pointer;
+
+        &:checked {
+            background: $ink;
+            box-shadow: inset 0 0 0 3px $background-color;
+        }
+
+        &:focus-visible { outline: 3px solid $ink-soft; outline-offset: 2px; }
+    }
+}
+
+.submissionFile {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 3.5rem;
+    padding: 0 0.75rem;
+    border: 3px dashed $ink;
+    border-radius: 0;
+    font-size: 1.25rem;
+    color: $ink-soft;
+    cursor: pointer;
+    overflow: hidden;
+
+    span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    &:hover { background: rgba($ink, 0.04); }
+    &:focus-within { outline: 3px solid $ink-soft; outline-offset: 2px; }
+}
+
+.submissionCover {
+    width: 200px;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 3px solid $ink;
+    border-radius: 0;
+}
+
+.submissionChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+// Mirrors the public .genreChip (genreFilter.scss) so submission genres
+// look like the filter chips fans see elsewhere on the site.
+.submissionChip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0.4rem 0.9rem;
+    background: transparent;
+    color: $ink;
+    border: 3px solid $ink;
+    border-radius: 0;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: $transition;
+
+    &:focus-visible { outline: 3px solid $ink-soft; outline-offset: 2px; }
+
+    &.submissionChip--active {
+        background: $ink;
+        color: $background-color;
+    }
+
+    @media (hover: hover) {
+        &:hover:not(:disabled) { background: rgba($ink, 0.1); }
+        &.submissionChip--active:hover { background: $ink; opacity: 0.85; }
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+}
+
+.submissionHoneypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.submissionPage .messageSubmitButton {
+    border-radius: 0;
+}
+
+.submissionPage .messageSubmitButton:disabled {
+    opacity: 0.6;
+    cursor: default;
+    transform: none;
+}
+
+.submissionThanks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    font-size: 1.5rem;
+    line-height: 1.5;
+    color: $ink-soft;
+}
+
+.submissionThanksTitle {
+    font-size: 3rem;
+    color: $ink;
+}
+
+.submissionPage .submissionHomeButton {
+    align-self: flex-start;
+    width: auto;
+    height: 60px;
+    margin-top: 0.5rem;
+    padding: 0 2rem;
+    font-size: 1.25rem;
+    white-space: nowrap;
+}

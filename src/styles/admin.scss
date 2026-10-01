@@ -489,3 +489,36 @@
         padding-left: 1.2rem;
     }
 }
+
+.submissionFilters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.submissionMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #D8CFC4;
+    border-radius: 8px;
+    font-size: 0.95rem;
+
+    a { color: inherit; }
+}
+
+.submissionMetaLinks {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.publishHiddenToggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    cursor: pointer;
+}

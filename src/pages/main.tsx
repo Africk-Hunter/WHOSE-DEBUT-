@@ -183,7 +183,7 @@ function Main() {
                     )}
                 </section>
                 <section className="bottomBar bottomBar--home">
-                    <a href="/about" className="contactLink">Are you releasing an album? Click here!</a>
+                    <a href="/submission" className="contactLink">Are you releasing an album? Click here!</a>
                     <button className="scrollArrow" onClick={() => scrollToSection(stillFreshRef)}>
                         <img src="/images/Arrow.svg" alt="" className="arrowImage" />
                     </button>
@@ -223,7 +223,7 @@ function Main() {
                     ))}
                 </section>
                 <section className="bottomBar">
-                    <a href="/about" className="contactLink">Are you releasing an album? Click here!</a>
+                    <a href="/submission" className="contactLink">Are you releasing an album? Click here!</a>
                     <button className="scrollArrow" onClick={() => scrollToSection(archiveRef)}>
                         <img src="/images/Arrow.svg" alt="" className="arrowImage" />
                     </button>
