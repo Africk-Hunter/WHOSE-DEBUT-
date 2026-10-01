@@ -15,8 +15,7 @@ import {
     buildAlbumUpdatePayload,
 } from '../utilities/database/firebaseInteractions';
 import { trimAudioToWav, AudioProcessingError } from '../utilities/audio/trimAudioToWav';
-import { fetchAllGenres, seedGenresIfEmpty, getOrCreateGenre } from '../utilities/database/genreInteractions';
-import { previewGenreMigration, runGenreMigration, MigrationReport } from '../utilities/database/migrateGenres';
+import { seedGenresIfEmpty, getOrCreateGenre, countAlbumsUsingGenre, deleteGenre } from '../utilities/database/genreInteractions';
 import { fetchPlaceholderSettings, savePlaceholderSettings, PlaceholderSettings, DEFAULT_PLACEHOLDER_SETTINGS } from '../utilities/database/placeholderSettings';
 import { GenreEntry, SEED_GENRES, albumGenres } from '../utilities/genres';
 import {
@@ -60,7 +59,7 @@ const emptyAlbumForm: AlbumFormData = {
     previewSongName: '',
 };
 
-type Tab = 'add' | 'manage' | 'submissions' | 'comments' | 'placeholders' | 'migration';
+type Tab = 'add' | 'manage' | 'submissions' | 'comments' | 'placeholders';
 type SubmissionFilter = SubmissionStatus | 'all';
 
 interface AlbumFormFieldsProps {
@@ -71,6 +70,7 @@ interface AlbumFormFieldsProps {
     onNewGenreLabelChange: (value: string) => void;
     onAddGenre: () => void;
     onToggleGenre: (slug: string) => void;
+    onDeleteGenre?: (genre: GenreEntry) => void;
     onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     imagePreviewUrl: string | null;
     existingImageUrl?: string;
@@ -92,6 +92,7 @@ const AlbumFormFields: React.FC<AlbumFormFieldsProps> = ({
     onNewGenreLabelChange,
     onAddGenre,
     onToggleGenre,
+    onDeleteGenre,
     onFileChange,
     imagePreviewUrl,
     existingImageUrl,
@@ -127,15 +128,27 @@ const AlbumFormFields: React.FC<AlbumFormFieldsProps> = ({
                 <label>Genres (choose up to 3)</label>
                 <div className="genreChipGrid">
                     {availableGenres.map(g => (
-                        <button
-                            type="button"
-                            key={g.slug}
-                            className={`genreChip ${formData.genres.includes(g.slug) ? 'genreChip--active' : ''}`}
-                            aria-pressed={formData.genres.includes(g.slug)}
-                            onClick={() => onToggleGenre(g.slug)}
-                        >
-                            {g.label}
-                        </button>
+                        <span key={g.slug} className="genreChipWrap">
+                            <button
+                                type="button"
+                                className={`genreChip ${formData.genres.includes(g.slug) ? 'genreChip--active' : ''}`}
+                                aria-pressed={formData.genres.includes(g.slug)}
+                                onClick={() => onToggleGenre(g.slug)}
+                            >
+                                {g.label}
+                            </button>
+                            {onDeleteGenre && (
+                                <button
+                                    type="button"
+                                    className="genreChipDelete"
+                                    aria-label={`Delete genre ${g.label}`}
+                                    title={`Delete "${g.label}"`}
+                                    onClick={() => onDeleteGenre(g)}
+                                >
+                                    &times;
+                                </button>
+                            )}
+                        </span>
                     ))}
                 </div>
                 <div className="genreAddRow">
@@ -205,10 +218,6 @@ const AlbumFormFields: React.FC<AlbumFormFieldsProps> = ({
             <div className="formGroup">
                 <label htmlFor="description">Artist Review</label>
                 <textarea id="description" name="description" value={formData.description} onChange={onInputChange} rows={4} />
-            </div>
-            <div className="formGroup">
-                <label htmlFor="fromafan">From a Fan</label>
-                <textarea id="fromafan" name="fromafan" value={formData.fromafan} onChange={onInputChange} rows={4} />
             </div>
         </div>
 
@@ -283,6 +292,7 @@ const AdminDashboard: React.FC = () => {
 
     // --- Comments tab state ---
     const [commentsAlbumId, setCommentsAlbumId] = useState('');
+    const [commentsSearch, setCommentsSearch] = useState('');
     const [newCommentName, setNewCommentName] = useState('');
     const [newCommentText, setNewCommentText] = useState('');
     const [isSavingComment, setIsSavingComment] = useState(false);
@@ -304,9 +314,6 @@ const AdminDashboard: React.FC = () => {
     const [publishHidden, setPublishHidden] = useState(true);
     const [isSavingReview, setIsSavingReview] = useState(false);
     const reviewDecodedAudioBufferRef = useRef<AudioBuffer | null>(null);
-
-    const [migrationReport, setMigrationReport] = useState<MigrationReport | null>(null);
-    const [migrationResult, setMigrationResult] = useState<{ converted: number } | null>(null);
 
     // --- Placeholders tab state ---
     const [placeholderSettings, setPlaceholderSettings] = useState<PlaceholderSettings>(DEFAULT_PLACEHOLDER_SETTINGS);
@@ -474,6 +481,22 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handleDeleteGenre = async (genre: GenreEntry) => {
+        try {
+            const usage = await countAlbumsUsingGenre(genre.slug);
+            const warning = usage > 0
+                ? `"${genre.label}" is still used by ${usage} album(s). They'll keep the slug but it won't display as a known genre. Delete anyway?`
+                : `Delete genre "${genre.label}"?`;
+            if (!window.confirm(warning)) return;
+            await deleteGenre(genre.slug);
+            setAvailableGenres(prev => prev.filter(g => g.slug !== genre.slug));
+            setAlbumData(prev => ({ ...prev, genres: prev.genres.filter(g => g !== genre.slug) }));
+        } catch (error) {
+            console.error('Error deleting genre:', error);
+            alert('Failed to delete genre.');
+        }
+    };
+
     const toggleEditGenre = (slug: string) => {
         setEditFormData(prev => {
             if (prev.genres.includes(slug)) {
@@ -605,6 +628,10 @@ const AdminDashboard: React.FC = () => {
 
     // --- Comments tab handlers ---
     const commentsAlbum = albums.find(a => a.id === commentsAlbumId) ?? null;
+    const commentsQuery = commentsSearch.trim().toLowerCase();
+    const filteredCommentsAlbums = commentsQuery
+        ? albums.filter(a => a.name.toLowerCase().includes(commentsQuery) || a.artist.toLowerCase().includes(commentsQuery))
+        : albums;
 
     const handleAddComment = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -944,23 +971,6 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    const handlePreviewMigration = async () => {
-        setMigrationResult(null);
-        setMigrationReport(await previewGenreMigration());
-    };
-
-    const handleRunMigration = async () => {
-        if (!migrationReport) return;
-        const confirmed = window.confirm(
-            `This will update ${migrationReport.toConvert} album(s) and create ${migrationReport.newGenres.length} new genre(s). Continue?`
-        );
-        if (!confirmed) return;
-        const result = await runGenreMigration();
-        setMigrationResult(result);
-        setMigrationReport(null);
-        setAvailableGenres(await fetchAllGenres());
-    };
-
     async function handleSeedAlbums() {
         if (!window.confirm('This will add 15 test albums to the live database. Continue?')) return;
         await seedTestAlbums();
@@ -974,396 +984,411 @@ const AdminDashboard: React.FC = () => {
 
     if (!authChecked) return <LoadingScreen />;
 
+    const tabs: { id: Tab; label: string }[] = [
+        { id: 'add', label: 'Add Album' },
+        { id: 'manage', label: 'Manage Albums' },
+        { id: 'submissions', label: pendingCount > 0 ? `Submissions (${pendingCount})` : 'Submissions' },
+        { id: 'comments', label: 'Fan Notes' },
+        { id: 'placeholders', label: 'Placeholders' },
+    ];
+
     return (
-        <div className="adminDash">
-            <h1 className="panelLabel">Admin Panel</h1>
+        <div className="about adminPage">
+            <section className="topBar">
+                <button className="backArrow backArrow--visible" onClick={() => navigate('/')}>
+                    <img src="/images/Arrow.svg" alt="Back to main site" className="arrowImage" />
+                </button>
+                <h1 className="pageHeader pageHeader--about">ADMIN</h1>
+            </section>
+            <div className="divider"></div>
 
-            <div className="adminTabs">
-                <button
-                    type="button"
-                    className={`adminTab ${activeTab === 'add' ? 'adminTab--active' : ''}`}
-                    onClick={() => setActiveTab('add')}
-                >
-                    Add Album
-                </button>
-                <button
-                    type="button"
-                    className={`adminTab ${activeTab === 'manage' ? 'adminTab--active' : ''}`}
-                    onClick={() => setActiveTab('manage')}
-                >
-                    Manage Albums
-                </button>
-                <button
-                    type="button"
-                    className={`adminTab ${activeTab === 'submissions' ? 'adminTab--active' : ''}`}
-                    onClick={() => setActiveTab('submissions')}
-                >
-                    Submissions{pendingCount > 0 ? ` (${pendingCount})` : ''}
-                </button>
-                <button
-                    type="button"
-                    className={`adminTab ${activeTab === 'comments' ? 'adminTab--active' : ''}`}
-                    onClick={() => setActiveTab('comments')}
-                >
-                    Comments
-                </button>
-                <button
-                    type="button"
-                    className={`adminTab ${activeTab === 'placeholders' ? 'adminTab--active' : ''}`}
-                    onClick={() => setActiveTab('placeholders')}
-                >
-                    Placeholders
-                </button>
-                <button
-                    type="button"
-                    className={`adminTab ${activeTab === 'migration' ? 'adminTab--active' : ''}`}
-                    onClick={() => setActiveTab('migration')}
-                >
-                    Genre Migration
-                </button>
-            </div>
+            <main className="adminContent">
+                <div className="adminToolbar">
+                    <nav className="adminTabs" aria-label="Admin sections">
+                        {tabs.map(tab => (
+                            <button
+                                type="button"
+                                key={tab.id}
+                                className={`adminTab ${activeTab === tab.id ? 'adminTab--active' : ''}`}
+                                aria-pressed={activeTab === tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                    <div className="adminActions">
+                        <button type="button" onClick={handleSeedAlbums} className="adminButton adminButton--ghost">
+                            Seed Test Albums
+                        </button>
+                        <button type="button" onClick={handleLogout} className="adminButton">
+                            Logout
+                        </button>
+                    </div>
+                </div>
 
-            {activeTab === 'add' && (
-                <section className="albumAdd">
-                    <h2>Add New Album</h2>
-                    <form onSubmit={handleSubmit} className="albumForm">
-                        <AlbumFormFields
-                            formData={albumData}
-                            onInputChange={handleInputChange}
-                            availableGenres={availableGenres}
-                            newGenreLabel={newGenreLabel}
-                            onNewGenreLabelChange={setNewGenreLabel}
-                            onAddGenre={handleAddGenre}
-                            onToggleGenre={toggleGenre}
-                            onFileChange={handleFileChange}
-                            imagePreviewUrl={imagePreviewUrl}
-                            onAudioFileChange={handleAudioFileChange}
-                            audioFile={audioFile}
-                            audioStartSeconds={audioStartSeconds}
-                            onAudioStartSecondsChange={setAudioStartSeconds}
-                            onAudioError={(message) => alert(message)}
-                            onAudioDecoded={(buffer) => { decodedAudioBufferRef.current = buffer; }}
-                            isProcessingAudio={isProcessingAudio}
-                        />
-                        <div className="submitRow">
-                            <button type="submit" className="adminButton" disabled={isProcessingAudio}>Add Album</button>
-                        </div>
-                    </form>
-                </section>
-            )}
-
-            {activeTab === 'manage' && (
-                <section className="albumAdd">
-                    {editingAlbum ? (
-                        <>
-                            <h2>Edit Album</h2>
-                            <form onSubmit={handleEditSubmit} className="albumForm">
-                                <AlbumFormFields
-                                    formData={editFormData}
-                                    onInputChange={handleEditInputChange}
-                                    availableGenres={availableGenres}
-                                    newGenreLabel={editNewGenreLabel}
-                                    onNewGenreLabelChange={setEditNewGenreLabel}
-                                    onAddGenre={handleEditAddGenre}
-                                    onToggleGenre={toggleEditGenre}
-                                    onFileChange={handleEditFileChange}
-                                    imagePreviewUrl={editImagePreviewUrl}
-                                    existingImageUrl={editingAlbum.image_url}
-                                    onAudioFileChange={handleEditAudioFileChange}
-                                    audioFile={editAudioFile}
-                                    audioStartSeconds={editAudioStartSeconds}
-                                    onAudioStartSecondsChange={setEditAudioStartSeconds}
-                                    onAudioError={(message) => alert(message)}
-                                    onAudioDecoded={(buffer) => { editDecodedAudioBufferRef.current = buffer; }}
-                                    existingAudioUrl={editingAlbum.preview_audio_url}
-                                    isProcessingAudio={editIsProcessingAudio}
-                                />
-                                <div className="submitRow">
-                                    <button type="button" className="adminButton" onClick={cancelEditingAlbum}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="adminButton" disabled={editIsProcessingAudio || isSavingEdit}>
-                                        {isSavingEdit ? 'Saving…' : 'Save Changes'}
-                                    </button>
-                                </div>
-                            </form>
-                        </>
-                    ) : (
-                        <>
-                            <div className="albumListHeader">
-                                <h2>Manage Albums</h2>
-                                <button type="button" className="adminButton" onClick={loadAlbumsList} disabled={albumsLoading}>
-                                    Refresh
-                                </button>
+                {activeTab === 'add' && (
+                    <section className="adminPanel">
+                        <h2>Add New Album</h2>
+                        <form onSubmit={handleSubmit} className="albumForm">
+                            <AlbumFormFields
+                                formData={albumData}
+                                onInputChange={handleInputChange}
+                                availableGenres={availableGenres}
+                                newGenreLabel={newGenreLabel}
+                                onNewGenreLabelChange={setNewGenreLabel}
+                                onAddGenre={handleAddGenre}
+                                onToggleGenre={toggleGenre}
+                                onDeleteGenre={handleDeleteGenre}
+                                onFileChange={handleFileChange}
+                                imagePreviewUrl={imagePreviewUrl}
+                                onAudioFileChange={handleAudioFileChange}
+                                audioFile={audioFile}
+                                audioStartSeconds={audioStartSeconds}
+                                onAudioStartSecondsChange={setAudioStartSeconds}
+                                onAudioError={(message) => alert(message)}
+                                onAudioDecoded={(buffer) => { decodedAudioBufferRef.current = buffer; }}
+                                isProcessingAudio={isProcessingAudio}
+                            />
+                            <div className="submitRow">
+                                <button type="submit" className="adminButton adminButton--primary" disabled={isProcessingAudio}>Add Album</button>
                             </div>
-                            {albumsLoading && <p className="formHint">Loading albums&hellip;</p>}
-                            {!albumsLoading && albums.length === 0 && <p className="formHint">No albums found.</p>}
-                            <ul className="albumList">
-                                {albums.map(album => (
-                                    <li key={album.id} className="albumListItem">
-                                        {album.image_url && (
-                                            <img src={optimizeCloudinaryUrl(album.image_url, 120)} alt="" className="albumListThumb" />
-                                        )}
-                                        <div className="albumListInfo">
-                                            <p className="albumListTitle">
-                                                {album.name}
-                                                {album.hidden && <span className="hiddenBadge">Hidden</span>}
-                                            </p>
-                                            <p className="albumListMeta">{album.artist} &middot; {album.year_released}</p>
-                                        </div>
-                                        <div className="albumListActions">
-                                            <button type="button" className="adminButton" onClick={() => startEditingAlbum(album)}>
-                                                Edit
-                                            </button>
-                                            <button type="button" className="adminButton" onClick={() => handleToggleHidden(album)}>
-                                                {album.hidden ? 'Unhide' : 'Hide'}
-                                            </button>
-                                            <button type="button" className="adminButton adminButton--danger" onClick={() => handleDeleteAlbum(album)}>
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    )}
-                </section>
-            )}
+                        </form>
+                    </section>
+                )}
 
-            {activeTab === 'submissions' && (
-                <section className="albumAdd">
-                    {reviewing ? (
-                        <>
-                            <h2>Review Submission</h2>
-                            <div className="submissionMeta">
-                                <p>
-                                    <strong>Contact:</strong>{' '}
-                                    <a href={`mailto:${reviewing.contact_email}`}>{reviewing.contact_email}</a>
-                                </p>
-                                {reviewing.submitted_at && (
-                                    <p><strong>Submitted:</strong> {new Date(reviewing.submitted_at).toLocaleString()}</p>
-                                )}
-                                {reviewing.suggested_genres && (
-                                    <p><strong>Suggested genres:</strong> {reviewing.suggested_genres}</p>
-                                )}
-                                {reviewing.unreleased && (
-                                    <p><strong>Unreleased:</strong> the artist has no streaming links yet.</p>
-                                )}
-                                {reviewing.other_links && (
-                                    <p className="submissionMetaLinks"><strong>Other links:</strong> {reviewing.other_links}</p>
-                                )}
-                                {reviewing.status === 'published' && (
-                                    <p><strong>Already published</strong> (album id {reviewing.published_album_id}).</p>
-                                )}
-                            </div>
-                            <form onSubmit={handlePublishSubmission} className="albumForm">
-                                <AlbumFormFields
-                                    formData={reviewFormData}
-                                    onInputChange={handleReviewInputChange}
-                                    availableGenres={availableGenres}
-                                    newGenreLabel={reviewNewGenreLabel}
-                                    onNewGenreLabelChange={setReviewNewGenreLabel}
-                                    onAddGenre={handleReviewAddGenre}
-                                    onToggleGenre={toggleReviewGenre}
-                                    onFileChange={e => setReviewImageFile(e.target.files?.[0] ?? null)}
-                                    imagePreviewUrl={reviewImagePreviewUrl}
-                                    existingImageUrl={reviewing.image_url}
-                                    onAudioFileChange={handleReviewAudioFileChange}
-                                    audioFile={reviewAudioFile}
-                                    audioStartSeconds={reviewAudioStartSeconds}
-                                    onAudioStartSecondsChange={setReviewAudioStartSeconds}
-                                    onAudioError={(message) => alert(message)}
-                                    onAudioDecoded={(buffer) => { reviewDecodedAudioBufferRef.current = buffer; }}
-                                    existingAudioUrl={reviewing.preview_audio_url}
-                                    isProcessingAudio={reviewIsProcessingAudio}
-                                />
-                                {reviewAudioLoading && <p className="formHint">Loading submitted audio&hellip;</p>}
-                                <label className="publishHiddenToggle">
-                                    <input
-                                        type="checkbox"
-                                        checked={publishHidden}
-                                        onChange={e => setPublishHidden(e.target.checked)}
+                {activeTab === 'manage' && (
+                    <section className="adminPanel">
+                        {editingAlbum ? (
+                            <>
+                                <h2>Edit Album</h2>
+                                <form onSubmit={handleEditSubmit} className="albumForm">
+                                    <AlbumFormFields
+                                        formData={editFormData}
+                                        onInputChange={handleEditInputChange}
+                                        availableGenres={availableGenres}
+                                        newGenreLabel={editNewGenreLabel}
+                                        onNewGenreLabelChange={setEditNewGenreLabel}
+                                        onAddGenre={handleEditAddGenre}
+                                        onToggleGenre={toggleEditGenre}
+                                        onFileChange={handleEditFileChange}
+                                        imagePreviewUrl={editImagePreviewUrl}
+                                        existingImageUrl={editingAlbum.image_url}
+                                        onAudioFileChange={handleEditAudioFileChange}
+                                        audioFile={editAudioFile}
+                                        audioStartSeconds={editAudioStartSeconds}
+                                        onAudioStartSecondsChange={setEditAudioStartSeconds}
+                                        onAudioError={(message) => alert(message)}
+                                        onAudioDecoded={(buffer) => { editDecodedAudioBufferRef.current = buffer; }}
+                                        existingAudioUrl={editingAlbum.preview_audio_url}
+                                        isProcessingAudio={editIsProcessingAudio}
                                     />
-                                    Hide album when published (unhide later from Manage Albums)
-                                </label>
-                                <div className="submitRow">
-                                    <button type="button" className="adminButton" onClick={closeReview}>
-                                        Back
-                                    </button>
-                                    <button type="button" className="adminButton" onClick={handleSaveReview} disabled={isSavingReview}>
-                                        Save Edits
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="adminButton"
-                                        disabled={isSavingReview || reviewIsProcessingAudio || reviewAudioLoading || reviewing.status === 'published'}
-                                    >
-                                        {isSavingReview ? 'Working…' : publishHidden ? 'Publish (Hidden)' : 'Publish'}
+                                    <div className="submitRow">
+                                        <button type="button" className="adminButton" onClick={cancelEditingAlbum}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="adminButton adminButton--primary" disabled={editIsProcessingAudio || isSavingEdit}>
+                                            {isSavingEdit ? 'Saving…' : 'Save Changes'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        ) : (
+                            <>
+                                <div className="albumListHeader">
+                                    <h2>Manage Albums</h2>
+                                    <button type="button" className="adminButton" onClick={loadAlbumsList} disabled={albumsLoading}>
+                                        Refresh
                                     </button>
                                 </div>
-                            </form>
-                        </>
-                    ) : (
-                        <>
-                            <div className="albumListHeader">
-                                <h2>Submissions</h2>
-                                <button type="button" className="adminButton" onClick={loadSubmissionsList} disabled={submissionsLoading}>
-                                    Refresh
-                                </button>
-                            </div>
-                            <div className="submissionFilters">
-                                {(['pending', 'published', 'rejected', 'all'] as SubmissionFilter[]).map(f => (
-                                    <button
-                                        type="button"
-                                        key={f}
-                                        className={`genreChip ${submissionFilter === f ? 'genreChip--active' : ''}`}
-                                        aria-pressed={submissionFilter === f}
-                                        onClick={() => setSubmissionFilter(f)}
-                                    >
-                                        {f}
-                                    </button>
-                                ))}
-                            </div>
-                            {submissionsLoading && <p className="formHint">Loading submissions&hellip;</p>}
-                            {!submissionsLoading && visibleSubmissions.length === 0 && (
-                                <p className="formHint">No submissions here.</p>
-                            )}
-                            <ul className="albumList">
-                                {visibleSubmissions.map(submission => {
-                                    const status = submission.status ?? 'pending';
-                                    return (
-                                        <li key={submission.id} className="albumListItem">
-                                            {submission.image_url && (
-                                                <img src={optimizeCloudinaryUrl(submission.image_url, 120)} alt="" className="albumListThumb" />
+                                {albumsLoading && <p className="formHint">Loading albums&hellip;</p>}
+                                {!albumsLoading && albums.length === 0 && <p className="formHint">No albums found.</p>}
+                                <ul className="albumList">
+                                    {albums.map(album => (
+                                        <li key={album.id} className="albumListItem">
+                                            {album.image_url && (
+                                                <img src={optimizeCloudinaryUrl(album.image_url, 120)} alt="" className="albumListThumb" />
                                             )}
                                             <div className="albumListInfo">
                                                 <p className="albumListTitle">
-                                                    {submission.name}
-                                                    {status !== 'pending' && <span className="hiddenBadge">{status}</span>}
+                                                    {album.name}
+                                                    {album.hidden && <span className="hiddenBadge">Hidden</span>}
                                                 </p>
-                                                <p className="albumListMeta">
-                                                    {submission.artist} &middot; {submission.year_released}
-                                                    {submission.submitted_at && <> &middot; sent {new Date(submission.submitted_at).toLocaleDateString()}</>}
-                                                </p>
+                                                <p className="albumListMeta">{album.artist} &middot; {album.year_released}</p>
                                             </div>
                                             <div className="albumListActions">
-                                                <button type="button" className="adminButton" onClick={() => startReview(submission)}>
-                                                    {status === 'published' ? 'View' : 'Review'}
+                                                <button type="button" className="adminButton" onClick={() => startEditingAlbum(album)}>
+                                                    Edit
                                                 </button>
-                                                {status === 'pending' && (
-                                                    <button type="button" className="adminButton" onClick={() => handleSetSubmissionStatus(submission, 'rejected')}>
-                                                        Reject
-                                                    </button>
-                                                )}
-                                                {status === 'rejected' && (
-                                                    <button type="button" className="adminButton" onClick={() => handleSetSubmissionStatus(submission, 'pending')}>
-                                                        Reopen
-                                                    </button>
-                                                )}
-                                                <button type="button" className="adminButton adminButton--danger" onClick={() => handleDeleteSubmission(submission)}>
+                                                <button type="button" className="adminButton" onClick={() => handleToggleHidden(album)}>
+                                                    {album.hidden ? 'Unhide' : 'Hide'}
+                                                </button>
+                                                <button type="button" className="adminButton adminButton--danger" onClick={() => handleDeleteAlbum(album)}>
                                                     Delete
                                                 </button>
                                             </div>
                                         </li>
-                                    );
-                                })}
-                            </ul>
-                        </>
-                    )}
-                </section>
-            )}
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+                    </section>
+                )}
 
-            {activeTab === 'comments' && (
-                <section className="albumAdd">
-                    <h2>Fan Notes</h2>
-                    {albumsLoading && <p className="formHint">Loading albums&hellip;</p>}
-                    <div className="formGroup">
-                        <label htmlFor="commentsAlbum">Album</label>
-                        <select
-                            id="commentsAlbum"
-                            value={commentsAlbumId}
-                            onChange={e => setCommentsAlbumId(e.target.value)}
-                        >
-                            <option value="">Select an album&hellip;</option>
-                            {albums.map(album => (
-                                <option key={album.id} value={album.id}>
-                                    {album.name} &middot; {album.artist}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {commentsAlbum && (
-                        <>
-                            <ul className="commentList">
-                                {(commentsAlbum.comments ?? []).length === 0 && (
-                                    <p className="formHint">No comments yet.</p>
-                                )}
-                                {(commentsAlbum.comments ?? []).map(comment => (
-                                    <li key={comment.id} className="commentListItem">
-                                        <div className="commentListInfo">
-                                            <p className="commentListName">{comment.name}</p>
-                                            <p className="commentListText">{comment.text}</p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="adminButton adminButton--danger"
-                                            onClick={() => handleRemoveComment(comment.id)}
-                                        >
-                                            Remove
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <form onSubmit={handleAddComment} className="albumForm">
-                                <div className="formSection">
-                                    <p className="formSectionTitle">Add a Comment</p>
-                                    <div className="formGroup">
-                                        <label htmlFor="commentName">Name</label>
-                                        <input
-                                            type="text"
-                                            id="commentName"
-                                            value={newCommentName}
-                                            onChange={e => setNewCommentName(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="formGroup">
-                                        <label htmlFor="commentText">Comment</label>
-                                        <textarea
-                                            id="commentText"
-                                            value={newCommentText}
-                                            onChange={e => setNewCommentText(e.target.value)}
-                                            rows={3}
-                                        />
-                                    </div>
+                {activeTab === 'submissions' && (
+                    <section className="adminPanel">
+                        {reviewing ? (
+                            <>
+                                <h2>Review Submission</h2>
+                                <div className="submissionMeta">
+                                    <p>
+                                        <strong>Contact:</strong>{' '}
+                                        <a href={`mailto:${reviewing.contact_email}`}>{reviewing.contact_email}</a>
+                                    </p>
+                                    {reviewing.submitted_at && (
+                                        <p><strong>Submitted:</strong> {new Date(reviewing.submitted_at).toLocaleString()}</p>
+                                    )}
+                                    {reviewing.suggested_genres && (
+                                        <p><strong>Suggested genres:</strong> {reviewing.suggested_genres}</p>
+                                    )}
+                                    {reviewing.unreleased && (
+                                        <p><strong>Unreleased:</strong> the artist has no streaming links yet.</p>
+                                    )}
+                                    {reviewing.other_links && (
+                                        <p className="submissionMetaLinks"><strong>Other links:</strong> {reviewing.other_links}</p>
+                                    )}
+                                    {reviewing.status === 'published' && (
+                                        <p><strong>Already published</strong> (album id {reviewing.published_album_id}).</p>
+                                    )}
                                 </div>
-                                <div className="submitRow">
-                                    <button type="submit" className="adminButton" disabled={isSavingComment}>
-                                        {isSavingComment ? 'Adding…' : 'Add Comment'}
+                                <form onSubmit={handlePublishSubmission} className="albumForm">
+                                    <AlbumFormFields
+                                        formData={reviewFormData}
+                                        onInputChange={handleReviewInputChange}
+                                        availableGenres={availableGenres}
+                                        newGenreLabel={reviewNewGenreLabel}
+                                        onNewGenreLabelChange={setReviewNewGenreLabel}
+                                        onAddGenre={handleReviewAddGenre}
+                                        onToggleGenre={toggleReviewGenre}
+                                        onFileChange={e => setReviewImageFile(e.target.files?.[0] ?? null)}
+                                        imagePreviewUrl={reviewImagePreviewUrl}
+                                        existingImageUrl={reviewing.image_url}
+                                        onAudioFileChange={handleReviewAudioFileChange}
+                                        audioFile={reviewAudioFile}
+                                        audioStartSeconds={reviewAudioStartSeconds}
+                                        onAudioStartSecondsChange={setReviewAudioStartSeconds}
+                                        onAudioError={(message) => alert(message)}
+                                        onAudioDecoded={(buffer) => { reviewDecodedAudioBufferRef.current = buffer; }}
+                                        existingAudioUrl={reviewing.preview_audio_url}
+                                        isProcessingAudio={reviewIsProcessingAudio}
+                                    />
+                                    {reviewAudioLoading && <p className="formHint">Loading submitted audio&hellip;</p>}
+                                    <label className="adminCheckbox">
+                                        <input
+                                            type="checkbox"
+                                            checked={publishHidden}
+                                            onChange={e => setPublishHidden(e.target.checked)}
+                                        />
+                                        Hide album when published (unhide later from Manage Albums)
+                                    </label>
+                                    <div className="submitRow">
+                                        <button type="button" className="adminButton" onClick={closeReview}>
+                                            Back
+                                        </button>
+                                        <button type="button" className="adminButton" onClick={handleSaveReview} disabled={isSavingReview}>
+                                            Save Edits
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="adminButton adminButton--primary"
+                                            disabled={isSavingReview || reviewIsProcessingAudio || reviewAudioLoading || reviewing.status === 'published'}
+                                        >
+                                            {isSavingReview ? 'Working…' : publishHidden ? 'Publish (Hidden)' : 'Publish'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        ) : (
+                            <>
+                                <div className="albumListHeader">
+                                    <h2>Submissions</h2>
+                                    <button type="button" className="adminButton" onClick={loadSubmissionsList} disabled={submissionsLoading}>
+                                        Refresh
                                     </button>
                                 </div>
-                            </form>
-                        </>
-                    )}
-                </section>
-            )}
+                                <div className="submissionFilters">
+                                    {(['pending', 'published', 'rejected', 'all'] as SubmissionFilter[]).map(f => (
+                                        <button
+                                            type="button"
+                                            key={f}
+                                            className={`genreChip ${submissionFilter === f ? 'genreChip--active' : ''}`}
+                                            aria-pressed={submissionFilter === f}
+                                            onClick={() => setSubmissionFilter(f)}
+                                        >
+                                            {f}
+                                        </button>
+                                    ))}
+                                </div>
+                                {submissionsLoading && <p className="formHint">Loading submissions&hellip;</p>}
+                                {!submissionsLoading && visibleSubmissions.length === 0 && (
+                                    <p className="formHint">No submissions here.</p>
+                                )}
+                                <ul className="albumList">
+                                    {visibleSubmissions.map(submission => {
+                                        const status = submission.status ?? 'pending';
+                                        return (
+                                            <li key={submission.id} className="albumListItem">
+                                                {submission.image_url && (
+                                                    <img src={optimizeCloudinaryUrl(submission.image_url, 120)} alt="" className="albumListThumb" />
+                                                )}
+                                                <div className="albumListInfo">
+                                                    <p className="albumListTitle">
+                                                        {submission.name}
+                                                        {status !== 'pending' && <span className="hiddenBadge">{status}</span>}
+                                                    </p>
+                                                    <p className="albumListMeta">
+                                                        {submission.artist} &middot; {submission.year_released}
+                                                        {submission.submitted_at && <> &middot; sent {new Date(submission.submitted_at).toLocaleDateString()}</>}
+                                                    </p>
+                                                </div>
+                                                <div className="albumListActions">
+                                                    <button type="button" className="adminButton" onClick={() => startReview(submission)}>
+                                                        {status === 'published' ? 'View' : 'Review'}
+                                                    </button>
+                                                    {status === 'pending' && (
+                                                        <button type="button" className="adminButton" onClick={() => handleSetSubmissionStatus(submission, 'rejected')}>
+                                                            Reject
+                                                        </button>
+                                                    )}
+                                                    {status === 'rejected' && (
+                                                        <button type="button" className="adminButton" onClick={() => handleSetSubmissionStatus(submission, 'pending')}>
+                                                            Reopen
+                                                        </button>
+                                                    )}
+                                                    <button type="button" className="adminButton adminButton--danger" onClick={() => handleDeleteSubmission(submission)}>
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </>
+                        )}
+                    </section>
+                )}
 
-            {activeTab === 'placeholders' && (
-                <section className="albumAdd">
-                    <h2>Placeholder Albums</h2>
-                    <p className="formHint">
-                        When there aren&rsquo;t enough real albums to fill the home page (Top 3 + Still Fresh,
-                        13 cards total), these fill the empty slots so visitors can see what a full page looks
-                        like. They&rsquo;re never clickable and never show up in the Archive.
-                    </p>
-                    {!placeholderSettingsLoaded ? (
-                        <p className="formHint">Loading&hellip;</p>
-                    ) : (
-                        <form onSubmit={handleSavePlaceholderSettings} className="albumForm">
-                            <div className="formSection">
-                                <div className="formGroup">
-                                    <label>
+                {activeTab === 'comments' && (
+                    <section className="adminPanel">
+                        <h2>Fan Notes</h2>
+                        {albumsLoading && <p className="formHint">Loading albums&hellip;</p>}
+                        <div className="formGroup">
+                            <label htmlFor="commentsAlbumSearch">Album</label>
+                            <input
+                                id="commentsAlbumSearch"
+                                type="search"
+                                placeholder="Search by album or artist&hellip;"
+                                value={commentsSearch}
+                                onChange={e => setCommentsSearch(e.target.value)}
+                            />
+                        </div>
+                        <div className="coverPicker">
+                            {filteredCommentsAlbums.length === 0 && !albumsLoading && (
+                                <p className="formHint">No albums match.</p>
+                            )}
+                            {filteredCommentsAlbums.map(album => (
+                                <button
+                                    key={album.id}
+                                    type="button"
+                                    className={`coverPickerItem${album.id === commentsAlbumId ? ' coverPickerItem--selected' : ''}`}
+                                    onClick={() => setCommentsAlbumId(album.id)}
+                                    title={`${album.name} · ${album.artist}`}
+                                >
+                                    <img src={optimizeCloudinaryUrl(album.image_url, 200)} alt="" loading="lazy" />
+                                    <span className="coverPickerName">{album.name}</span>
+                                    <span className="coverPickerArtist">{album.artist}</span>
+                                    {(album.comments?.length ?? 0) > 0 && (
+                                        <span className="coverPickerBadge">{album.comments!.length}</span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                        {commentsAlbum && (
+                            <h3 className="coverPickerSelected">
+                                {commentsAlbum.name} &middot; {commentsAlbum.artist}
+                            </h3>
+                        )}
+
+                        {commentsAlbum && (
+                            <>
+                                {(commentsAlbum.comments ?? []).length === 0 && (
+                                    <p className="formHint">No fan notes yet.</p>
+                                )}
+                                <ul className="commentList">
+                                    {(commentsAlbum.comments ?? []).map(comment => (
+                                        <li key={comment.id} className="commentListItem">
+                                            <div className="commentListInfo">
+                                                <p className="commentListName">{comment.name}</p>
+                                                <p className="commentListText">{comment.text}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="adminButton adminButton--danger"
+                                                onClick={() => handleRemoveComment(comment.id)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <form onSubmit={handleAddComment} className="albumForm">
+                                    <div className="formSection">
+                                        <p className="formSectionTitle">Add a Fan Note</p>
+                                        <div className="formGroup">
+                                            <label htmlFor="commentName">Name</label>
+                                            <input
+                                                type="text"
+                                                id="commentName"
+                                                value={newCommentName}
+                                                onChange={e => setNewCommentName(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="formGroup">
+                                            <label htmlFor="commentText">Comment</label>
+                                            <textarea
+                                                id="commentText"
+                                                value={newCommentText}
+                                                onChange={e => setNewCommentText(e.target.value)}
+                                                rows={3}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="submitRow">
+                                        <button type="submit" className="adminButton adminButton--primary" disabled={isSavingComment}>
+                                            {isSavingComment ? 'Adding…' : 'Add Fan Note'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
+                    </section>
+                )}
+
+                {activeTab === 'placeholders' && (
+                    <section className="adminPanel">
+                        <h2>Placeholder Albums</h2>
+                        <p className="formHint">
+                            When there aren&rsquo;t enough real albums to fill the home page (Top 3 + Still Fresh,
+                            13 cards total), these fill the empty slots so visitors can see what a full page looks
+                            like. They&rsquo;re never clickable and never show up in the Archive.
+                        </p>
+                        {!placeholderSettingsLoaded ? (
+                            <p className="formHint">Loading&hellip;</p>
+                        ) : (
+                            <form onSubmit={handleSavePlaceholderSettings} className="albumForm">
+                                <div className="formSection">
+                                    <label className="adminCheckbox">
                                         <input
                                             type="checkbox"
                                             checked={placeholderSettings.enabled}
@@ -1371,136 +1396,78 @@ const AdminDashboard: React.FC = () => {
                                                 setPlaceholderSettings(prev => ({ ...prev, enabled: e.target.checked }))
                                             }
                                         />
-                                        {' '}Show placeholder albums
+                                        Show placeholder albums
                                     </label>
-                                </div>
-                                <div className="formGroup">
-                                    <label htmlFor="placeholderCount">How many (0&ndash;13)</label>
-                                    <input
-                                        type="number"
-                                        id="placeholderCount"
-                                        min={0}
-                                        max={13}
-                                        value={placeholderSettings.count}
-                                        onChange={e =>
-                                            setPlaceholderSettings(prev => ({
-                                                ...prev,
-                                                count: Math.max(0, Math.min(13, Number(e.target.value) || 0)),
-                                            }))
-                                        }
-                                    />
-                                </div>
-                                <div className="formRow">
                                     <div className="formGroup">
-                                        <label htmlFor="placeholderTitle">Title</label>
+                                        <label htmlFor="placeholderCount">How many (0&ndash;13)</label>
                                         <input
-                                            type="text"
-                                            id="placeholderTitle"
-                                            value={placeholderSettings.title}
+                                            type="number"
+                                            id="placeholderCount"
+                                            min={0}
+                                            max={13}
+                                            value={placeholderSettings.count}
                                             onChange={e =>
-                                                setPlaceholderSettings(prev => ({ ...prev, title: e.target.value }))
+                                                setPlaceholderSettings(prev => ({
+                                                    ...prev,
+                                                    count: Math.max(0, Math.min(13, Number(e.target.value) || 0)),
+                                                }))
                                             }
                                         />
                                     </div>
+                                    <div className="formRow">
+                                        <div className="formGroup">
+                                            <label htmlFor="placeholderTitle">Title</label>
+                                            <input
+                                                type="text"
+                                                id="placeholderTitle"
+                                                value={placeholderSettings.title}
+                                                onChange={e =>
+                                                    setPlaceholderSettings(prev => ({ ...prev, title: e.target.value }))
+                                                }
+                                            />
+                                        </div>
+                                        <div className="formGroup">
+                                            <label htmlFor="placeholderArtist">Artist</label>
+                                            <input
+                                                type="text"
+                                                id="placeholderArtist"
+                                                value={placeholderSettings.artist}
+                                                onChange={e =>
+                                                    setPlaceholderSettings(prev => ({ ...prev, artist: e.target.value }))
+                                                }
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="formGroup">
-                                        <label htmlFor="placeholderArtist">Artist</label>
+                                        <label htmlFor="placeholderImage">Cover Image</label>
                                         <input
-                                            type="text"
-                                            id="placeholderArtist"
-                                            value={placeholderSettings.artist}
-                                            onChange={e =>
-                                                setPlaceholderSettings(prev => ({ ...prev, artist: e.target.value }))
-                                            }
+                                            type="file"
+                                            id="placeholderImage"
+                                            accept="image/*"
+                                            onChange={handlePlaceholderFileChange}
                                         />
+                                        {(placeholderImagePreviewUrl || placeholderSettings.image_url) && (
+                                            <img
+                                                src={
+                                                    placeholderImagePreviewUrl ||
+                                                    optimizeCloudinaryUrl(placeholderSettings.image_url, 320)
+                                                }
+                                                alt="Placeholder cover preview"
+                                                className="coverPreview"
+                                            />
+                                        )}
                                     </div>
                                 </div>
-                                <div className="formGroup">
-                                    <label htmlFor="placeholderImage">Cover Image</label>
-                                    <input
-                                        type="file"
-                                        id="placeholderImage"
-                                        accept="image/*"
-                                        onChange={handlePlaceholderFileChange}
-                                    />
-                                    {(placeholderImagePreviewUrl || placeholderSettings.image_url) && (
-                                        <img
-                                            src={
-                                                placeholderImagePreviewUrl ||
-                                                optimizeCloudinaryUrl(placeholderSettings.image_url, 320)
-                                            }
-                                            alt="Placeholder cover preview"
-                                            className="coverPreview"
-                                        />
-                                    )}
+                                <div className="submitRow">
+                                    <button type="submit" className="adminButton adminButton--primary" disabled={isSavingPlaceholders}>
+                                        {isSavingPlaceholders ? 'Saving…' : 'Save Placeholder Settings'}
+                                    </button>
                                 </div>
-                            </div>
-                            <div className="submitRow">
-                                <button type="submit" className="adminButton" disabled={isSavingPlaceholders}>
-                                    {isSavingPlaceholders ? 'Saving…' : 'Save Placeholder Settings'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </section>
-            )}
-
-            {activeTab === 'migration' && (
-                <section className="genreMigration">
-                    <h2>Genre Migration (temporary)</h2>
-                    <p className="formHint">
-                        Converts any album still storing genres as free text into the canonical slug list above.
-                        Always preview first &mdash; nothing is written until you run the migration.
-                    </p>
-                    <div className="adminActions">
-                        <button type="button" className="adminButton" onClick={handlePreviewMigration}>
-                            Preview Migration
-                        </button>
-                        <button
-                            type="button"
-                            className="adminButton"
-                            onClick={handleRunMigration}
-                            disabled={!migrationReport || migrationReport.toConvert === 0}
-                        >
-                            Run Migration
-                        </button>
-                    </div>
-                    {migrationReport && (
-                        <div className="migrationReport">
-                            <p>{migrationReport.totalAlbums} albums total &middot; {migrationReport.toConvert} to convert</p>
-                            {migrationReport.newGenres.length > 0 && (
-                                <>
-                                    <p>New genres that would be created:</p>
-                                    <ul>
-                                        {migrationReport.newGenres.map(g => (
-                                            <li key={g.slug}>{g.label} ({g.slug})</li>
-                                        ))}
-                                    </ul>
-                                </>
-                            )}
-                            <ul className="migrationItems">
-                                {migrationReport.items.filter(item => !item.alreadyCanonical).map(item => (
-                                    <li key={item.albumId}>
-                                        {item.albumName}: {item.resolved.map(r => `${r.label}${r.status === 'new' ? ' (new)' : ''}`).join(', ')}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    {migrationResult && <p>Converted {migrationResult.converted} album(s).</p>}
-                </section>
-            )}
-
-            <div className="adminActions">
-                <button onClick={() => navigate('/')} className="adminButton">
-                    Return to Main Site
-                </button>
-                <button onClick={handleSeedAlbums} className="adminButton">
-                    Seed 15 Test Albums
-                </button>
-                <button onClick={handleLogout} className="adminButton">
-                    Logout
-                </button>
-            </div>
+                            </form>
+                        )}
+                    </section>
+                )}
+            </main>
         </div>
     );
 };

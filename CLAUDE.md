@@ -54,7 +54,7 @@ On every page load, `Main` clears `localStorage`, re-fetches all albums from Fir
 
 ### Genre System
 
-Genres are a managed Firestore collection, not free text. Each doc in `genres` is keyed by slug (`slugify()` in [src/utilities/genres.ts](src/utilities/genres.ts)) with a `label` field; `albums.genres` stores an array of those slugs. [src/utilities/database/genreInteractions.ts](src/utilities/database/genreInteractions.ts) owns all reads/writes: `fetchAllGenres`, `seedGenresIfEmpty` (seeds from `SEED_GENRES` the first time the collection is empty), and `getOrCreateGenre` (the single dedup point — matches by slug or case-insensitive label before creating a new doc), used both by the admin "+ Add genre" flow and by [src/utilities/database/migrateGenres.ts](src/utilities/database/migrateGenres.ts), a one-off admin-triggered migration (preview + run) that converts legacy comma-separated `genres` strings to slug arrays. `albumGenres()` tolerates both shapes so an unmigrated record never crashes a caller.
+Genres are a managed Firestore collection, not free text. Each doc in `genres` is keyed by slug (`slugify()` in [src/utilities/genres.ts](src/utilities/genres.ts)) with a `label` field; `albums.genres` stores an array of those slugs. [src/utilities/database/genreInteractions.ts](src/utilities/database/genreInteractions.ts) owns all reads/writes: `fetchAllGenres`, `seedGenresIfEmpty` (seeds from `SEED_GENRES` the first time the collection is empty), and `getOrCreateGenre` (the single dedup point — matches by slug or case-insensitive label before creating a new doc), used by the admin "+ Add genre" flow. `albumGenres()` tolerates both shapes so an unmigrated record never crashes a caller.
 
 Filtering is URL-driven via the `useGenreFilter` hook ([src/hooks/useGenreFilter.ts](src/hooks/useGenreFilter.ts)), which reads/writes a `?genre=slug1,slug2` search param (alphabetical, deduped) so selection is shareable and stays in sync across any component in the route tree. `GenreFilterBar` + `GenreFilterPanel` are the shared UI, driven by `computeAvailableGenres()` for counts/ordering; used on both the "Still Fresh" section and the Archive. Clicking a genre chip on `AlbumView` navigates to `/?genre=slug#archive` with `location.state.fromGenreChip`, which `Archive` reads to decide whether to latch a visible back arrow.
 
@@ -107,7 +107,7 @@ Two separate, non-overlapping mechanisms share the "fan feedback" idea:
 | `/about` | `About` | Platform description + `Contact` (EmailJS contact form) |
 | `/submission` | `Submission` | Public release-submission form; writes to the `submissions` collection (see Artist Submissions) |
 | `/admin` | `AdminPanel` | Firebase email/password login |
-| `/admin/dashboard` | `AdminDashboard` | Protected; tabs for adding/editing/deleting albums, genre migration, and comment moderation |
+| `/admin/dashboard` | `AdminDashboard` | Protected; tabs for adding/editing/deleting albums, submissions, comment moderation, and placeholders |
 
 ### Scroll Behavior
 
@@ -126,7 +126,6 @@ All SCSS is imported through a single entry point: [src/styles/index.scss](src/s
 - [src/utilities/database/firebaseClient.ts](src/utilities/database/firebaseClient.ts) — initializes Firebase app, exports `db`, `storage`, `auth`
 - [src/utilities/database/firebaseInteractions.ts](src/utilities/database/firebaseInteractions.ts) — `loadAlbumsFromDatabase`, `uploadCoverToCloudinary`, `uploadPreviewAudioToCloudinary`, `submitAlbumToFirebase`, `updateAlbumInFirebase`, `deleteAlbumFromFirebase`, `updateAlbumComments`, `seedTestAlbums`
 - [src/utilities/database/genreInteractions.ts](src/utilities/database/genreInteractions.ts) — `fetchAllGenres`, `seedGenresIfEmpty`, `getOrCreateGenre` (see Genre System)
-- [src/utilities/database/migrateGenres.ts](src/utilities/database/migrateGenres.ts) — `previewGenreMigration` (read-only) / `runGenreMigration` (idempotent) for converting legacy comma-separated genre strings to slug arrays
 - [src/utilities/genres.ts](src/utilities/genres.ts) — `slugify`, `albumGenres` (tolerates legacy string shape), `computeAvailableGenres` (counts + ordering for filter UI), `SEED_GENRES`
 - [src/hooks/useGenreFilter.ts](src/hooks/useGenreFilter.ts) — URL-search-param-backed genre selection shared across components
 - [src/utilities/fanNotes.ts](src/utilities/fanNotes.ts) — `validateFanNote` client-side validation for the Fan Notes form

@@ -39,21 +39,37 @@ const AdminPanel: React.FC = () => {
         }
     };
 
-    if (authSuccess) {
-        return <div className="admin">Login successful! Redirecting...</div>;
-    }
-
     return (
-        <form onSubmit={handleLogin} className='admin'>
-            {authError && <p className="error-message">{authError}</p>}
-            <p className="inputLabel">Email</p>
-            <input type="email" className="admininput" placeholder='Email' value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
-            <p className="inputLabel">Password</p>
-            <input type="password" className="admininput" placeholder='Password' value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} />
-            <button type="submit" className="adminSubmit" disabled={loading}>
-                {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-        </form>
+        <div className="about adminPage">
+            <section className="topBar">
+                <button className="backArrow backArrow--visible" onClick={() => navigate('/')}>
+                    <img src="/images/Arrow.svg" alt="Back" className="arrowImage" />
+                </button>
+                <h1 className="pageHeader pageHeader--about">ADMIN</h1>
+            </section>
+            <div className="divider"></div>
+
+            <main className="adminContent adminContent--login">
+                {authSuccess ? (
+                    <p className="adminLoginStatus">Signed in. Redirecting&hellip;</p>
+                ) : (
+                    <form onSubmit={handleLogin} className="adminLogin">
+                        <label className="formGroup">
+                            <span>Email</span>
+                            <input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
+                        </label>
+                        <label className="formGroup">
+                            <span>Password</span>
+                            <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} />
+                        </label>
+                        {authError && <p className="adminError">{authError}</p>}
+                        <button type="submit" className="adminButton adminButton--primary" disabled={loading}>
+                            {loading ? 'Signing In…' : 'Sign In'}
+                        </button>
+                    </form>
+                )}
+            </main>
+        </div>
     );
 };
 

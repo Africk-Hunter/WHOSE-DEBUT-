@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from './firebaseClient';
 import { GenreEntry, slugify } from '../genres';
 
@@ -25,7 +25,7 @@ async function seedGenresIfEmpty(seed: GenreEntry[]): Promise<GenreEntry[]> {
 // Normalizes a typed label, reuses an existing genre if one already matches
 // by slug or by label (case-insensitive), and only creates a new Firestore
 // doc when neither match — this is the single place duplicate-prevention
-// lives, shared by the admin "+ Add genre" flow and the migration script.
+// lives, used by the admin "+ Add genre" flow.
 async function getOrCreateGenre(rawLabel: string): Promise<GenreEntry> {
     const label = rawLabel.trim();
     const slug = slugify(label);
@@ -46,4 +46,15 @@ async function getOrCreateGenre(rawLabel: string): Promise<GenreEntry> {
     return { slug, label };
 }
 
-export { fetchAllGenres, seedGenresIfEmpty, getOrCreateGenre };
+// Counts albums (hidden included) whose `genres` array still references this
+// slug, so the admin can be warned before orphaning it.
+async function countAlbumsUsingGenre(slug: string): Promise<number> {
+    const snapshot = await getDocs(query(collection(db, 'albums'), where('genres', 'array-contains', slug)));
+    return snapshot.size;
+}
+
+async function deleteGenre(slug: string): Promise<void> {
+    await deleteDoc(doc(db, 'genres', slug));
+}
+
+export { fetchAllGenres, seedGenresIfEmpty, getOrCreateGenre, countAlbumsUsingGenre, deleteGenre };

@@ -1,165 +1,152 @@
 @use './variables' as *;
 
-.admin {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100vh;
+// Admin pages reuse the public page chrome (.about + .topBar + .pageHeader +
+// .divider) and mirror submission.scss's visual language: square 3px ink
+// borders, cream fields, monospace uppercase chips/buttons.
+
+$admin-border: 3px solid $ink;
+$admin-rule: 2px solid rgba($ink, 0.15);
+$admin-danger: #B3413A;
+$admin-mono: ui-monospace, Menlo, monospace;
+
+@mixin admin-focus {
+    outline: 3px solid $ink-soft;
+    outline-offset: 2px;
+}
+
+// Monospace uppercase button/chip base shared by tabs, buttons and chips.
+@mixin admin-control {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: .5rem;
-}
-
-.adminDash {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
-    padding: 3rem 1.5rem 4rem;
-    box-sizing: border-box;
-}
-
-.admininput {
-    width: 20rem;
-    height: 3rem;
-    padding: 1rem;
-    font-size: 2rem;
-    background: black;
-    color: white;
-    border-radius: 10px;
-}
-
-.inputLabel {
-    font-size: 2rem;
-}
-
-.adminSubmit {
-    width: 10rem;
-    height: 3rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    margin-top: 1rem;
-    background: black;
-    color: white;
-    border-radius: 10px;
-    transition: .3s all;
-
-    &:hover {
-        transform: scale(1.1);
-    }
-
-    &:active {
-        transform: scale(.95);
-    }
-}
-
-.panelLabel {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-}
-
-.adminActions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.adminButton {
-    width: auto;
-    height: auto;
-    padding: .6rem 1.5rem;
-    font-size: 1.15rem;
-    border: 1px solid $ink;
-    border-radius: 5px;
-    background: white;
+    min-height: 40px;
+    padding: 0.4rem 1rem;
+    background: transparent;
     color: $ink;
+    border: $admin-border;
+    border-radius: 0;
+    font-family: $admin-mono;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
     cursor: pointer;
     transition: $transition;
 
-    &:hover {
-        background: $ink;
-        color: white;
+    &:focus-visible { @include admin-focus; }
+
+    @media (hover: hover) {
+        &:hover:not(:disabled) { background: rgba($ink, 0.1); }
     }
 
     &:disabled {
-        opacity: 0.5;
+        opacity: 0.35;
         cursor: not-allowed;
-
-        &:hover {
-            background: white;
-            color: $ink;
-        }
     }
+}
 
-    &--danger {
-        border-color: #B3413A;
-        color: #B3413A;
+// --- Page layout ---
 
-        &:hover {
-            background: #B3413A;
-            color: white;
-        }
-    }
+.adminContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    max-width: 880px;
+    padding: 3rem 3.5rem 4rem;
+
+    @media (max-width: 1024px) { padding: 2rem 1rem 3rem; }
+
+    &--login { max-width: 480px; }
+}
+
+.adminToolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: $admin-rule;
 }
 
 .adminTabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 2rem;
 }
 
 .adminTab {
-    padding: 0.6rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border: 1px solid #D8CFC4;
-    border-radius: 999px;
-    background: white;
-    color: $ink-soft;
-    cursor: pointer;
-    transition: $transition;
+    @include admin-control;
 
-    &:hover {
-        border-color: $ink;
-    }
-
-    &--active {
+    &.adminTab--active {
         background: $ink;
-        color: white;
-        border-color: $ink;
+        color: $background-color;
     }
 }
 
-.albumAdd {
-    width: 100%;
-    max-width: 640px;
+.adminActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.adminPanel {
     display: flex;
     flex-direction: column;
-    background: white;
-    border-radius: 12px;
-    padding: 2rem 2.5rem 2.5rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    box-sizing: border-box;
+    gap: 1.5rem;
+    width: 100%;
 
     h2 {
-        font-size: 1.75rem;
-        margin: 0 0 1.5rem;
+        font-size: 2.5rem;
+        font-weight: normal;
+        line-height: 1;
+        color: $ink;
     }
 }
+
+// --- Buttons ---
+
+.adminButton {
+    @include admin-control;
+
+    &--primary {
+        background: $ink;
+        color: $background-color;
+
+        @media (hover: hover) {
+            &:hover:not(:disabled) { background: $ink; opacity: 0.85; }
+        }
+    }
+
+    &--ghost {
+        border-color: rgba($ink, 0.3);
+        color: $ink-soft;
+    }
+
+    &--danger {
+        border-color: $admin-danger;
+        color: $admin-danger;
+
+        @media (hover: hover) {
+            &:hover:not(:disabled) { background: $admin-danger; color: $background-color; }
+        }
+    }
+}
+
+// --- Forms ---
 
 .albumForm {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .formSection {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid #E5DED6;
+    gap: 1.25rem;
+    padding-top: 1.75rem;
+    border-top: $admin-rule;
 
     &:first-child {
         padding-top: 0;
@@ -168,81 +155,146 @@
 }
 
 .formSectionTitle {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: $muted;
+    font-family: $admin-mono;
+    font-size: 0.85rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin: 0;
+    letter-spacing: 0.08em;
+    color: $muted;
 }
 
 .formRow {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
 
-    .formGroup {
-        flex: 1;
-    }
+    @media (max-width: 768px) { grid-template-columns: 1fr; }
 }
 
 .formGroup {
-    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
 
-    label {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: $ink-soft;
+    > label,
+    > span {
+        font-size: 1.25rem;
+        color: $ink;
     }
 
-    input,
-    textarea {
+    input:not([type='checkbox']):not([type='file']),
+    textarea,
+    select {
         width: 100%;
-        box-sizing: border-box;
-        padding: 0.65rem 0.75rem;
-        font-size: 1rem;
-        font-family: inherit;
-        color: $ink;
+        min-height: 3rem;
+        padding: 0.6rem 0.75rem;
         background: $background-color;
-        border: 1px solid #D8CFC4;
-        border-radius: 6px;
+        color: $ink;
+        border: $admin-border;
+        border-radius: 0;
+        font-size: 1.1rem;
         resize: vertical;
-        transition: border-color 0.2s ease;
 
-        &:focus {
-            outline: none;
-            border-color: $ink;
+        &::placeholder { color: $muted; }
+        &:focus-visible { @include admin-focus; }
+        &:disabled { opacity: 0.5; }
+    }
+
+    textarea { line-height: 1.4; }
+
+    select { cursor: pointer; }
+
+    input[type='file'] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 3px dashed $ink;
+        font-size: 1rem;
+        color: $ink-soft;
+        cursor: pointer;
+
+        &:focus-visible { @include admin-focus; }
+
+        &::file-selector-button {
+            @include admin-control;
+            margin-right: 0.75rem;
+            background: $ink;
+            color: $background-color;
         }
+    }
+}
+
+.formHint {
+    font-size: 1rem;
+    line-height: 1.4;
+    color: $muted;
+}
+
+.adminError {
+    font-size: 1rem;
+    color: $danger-color;
+}
+
+.adminCheckbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    align-self: flex-start;
+    font-size: 1.15rem;
+    color: $ink;
+    cursor: pointer;
+
+    input {
+        appearance: none;
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin: 0;
+        border: $admin-border;
+        background: $background-color;
+        cursor: pointer;
+
+        &:checked {
+            background: $ink;
+            box-shadow: inset 0 0 0 3px $background-color;
+        }
+
+        &:focus-visible { @include admin-focus; }
+    }
+}
+
+.submitRow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1.5rem;
+    border-top: $admin-rule;
+
+    &--start {
+        justify-content: flex-start;
+        padding-top: 0;
+        border-top: none;
     }
 }
 
 .coverPreview {
     width: 10rem;
-    height: 10rem;
+    aspect-ratio: 1;
     object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #D8CFC4;
-    margin-top: 0.5rem;
-}
-
-.formHint {
-    font-size: 0.8rem;
-    color: $muted;
-    margin: -0.2rem 0 0;
+    border: $admin-border;
 }
 
 .audioPreview {
     width: 100%;
-    margin-top: 0.5rem;
 }
+
+// --- Audio clip selector ---
 
 .audioClipSelector {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-top: 0.5rem;
 }
 
 .audioClipSelectorWaveform {
@@ -250,14 +302,11 @@
     width: 100%;
     height: 80px;
     background: $background-color;
-    border: 1px solid #D8CFC4;
-    border-radius: 6px;
+    border: $admin-border;
     overflow: hidden;
     touch-action: none;
 
-    &--interactive {
-        cursor: pointer;
-    }
+    &--interactive { cursor: pointer; }
 }
 
 .audioClipSelectorCanvas {
@@ -269,77 +318,61 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.18);
-    border-left: 2px solid $ink;
-    border-right: 2px solid $ink;
+    background: rgba($ink, 0.18);
+    border-left: 3px solid $ink;
+    border-right: 3px solid $ink;
     cursor: grab;
 
-    &:active {
-        cursor: grabbing;
-    }
+    &:active { cursor: grabbing; }
 
     &:focus-visible {
-        outline: 2px solid $ink;
-        outline-offset: -2px;
+        outline: 3px solid $ink;
+        outline-offset: -3px;
     }
 }
 
-.audioClipSelectorTransport {
+.audioClipSelectorTransport,
+.audioClipSelectorSelectionRow {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     width: 100%;
 }
 
-.audioClipSelectorSelectionRow {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+// --- Genre picker ---
 
-    .adminButton {
-        padding: 0.4rem 1rem;
-        font-size: 0.9rem;
-    }
-}
+.genrePicker { gap: 0.75rem; }
 
-.submitRow {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding-top: 0.5rem;
-}
-
-.genrePicker {
-    gap: 0.6rem;
-}
-
-.genreChipGrid {
+.genreChipGrid,
+.submissionFilters {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
-.genreChip {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-    font-family: ui-monospace, Menlo, monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: $background-color;
-    color: $ink;
-    border: 1.5px solid #D8CFC4;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: $transition;
-
-    &:hover {
-        border-color: $ink;
-    }
+// Scoped so it doesn't collide with the public .genreChip in genreFilter.scss.
+.adminPage .genreChip {
+    @include admin-control;
+    font-size: 0.75rem;
 
     &.genreChip--active {
         background: $ink;
-        color: white;
-        border-color: $ink;
+        color: $background-color;
+    }
+}
+
+.genreChipWrap {
+    display: inline-flex;
+    align-items: stretch;
+
+    .genreChipDelete {
+        @include admin-control;
+        font-size: 0.75rem;
+        padding-inline: 0.5rem;
+        margin-left: -1px;
+        opacity: 0.6;
+
+        &:hover { opacity: 1; background: #c0392b; color: $background-color; }
     }
 }
 
@@ -347,165 +380,197 @@
     display: flex;
     gap: 0.5rem;
 
-    input {
-        flex: 1;
-    }
-
-    .adminButton {
-        flex-shrink: 0;
-    }
+    input { flex: 1; }
 }
+
+// --- Lists (albums, submissions, fan notes) ---
 
 .albumListHeader {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 0.75rem;
 }
 
-.albumList {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.albumList,
+.commentList {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    list-style: none;
 }
 
-.albumListItem {
+.albumListItem,
+.commentListItem {
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 0.75rem;
-    border: 1px solid #E5DED6;
-    border-radius: 8px;
-}
+    border: $admin-border;
 
-.albumListThumb {
-    width: 3.5rem;
-    height: 3.5rem;
-    object-fit: cover;
-    border-radius: 6px;
-    flex-shrink: 0;
-}
-
-.albumListInfo {
-    flex: 1;
-    min-width: 0;
-}
-
-.albumListTitle {
-    font-weight: 700;
-    margin: 0;
-}
-
-.hiddenBadge {
-    margin-left: 0.6rem;
-    padding: 0.15rem 0.55rem;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: $muted;
-    border: 1px solid #D8CFC4;
-    border-radius: 999px;
-}
-
-.albumListMeta {
-    font-size: 0.85rem;
-    color: $muted;
-    margin: 0.1rem 0 0;
-}
-
-.albumListActions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-
-    .adminButton {
-        padding: 0.4rem 1rem;
-        font-size: 0.9rem;
+    @media (max-width: 768px) {
+        flex-wrap: wrap;
     }
 }
 
-.commentList {
-    list-style: none;
-    margin: 0 0 1.5rem;
-    padding: 0;
+.commentListItem { align-items: flex-start; }
+
+.albumListThumb {
+    flex-shrink: 0;
+    width: 4rem;
+    height: 4rem;
+    object-fit: cover;
+    border: 2px solid $ink;
+}
+
+// Fan Notes album picker: horizontally scrollable strip of covers.
+.coverPicker {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.25rem 0.25rem 0.75rem;
+    margin-bottom: 1rem;
+    scroll-snap-type: x proximity;
+}
+
+.coverPickerItem {
+    position: relative;
+    flex: 0 0 8rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-}
-
-.commentListItem {
-    display: flex;
     align-items: flex-start;
-    gap: 1rem;
-    padding: 0.75rem;
-    border: 1px solid #E5DED6;
-    border-radius: 8px;
+    gap: 0.15rem;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    color: $ink;
+    font: inherit;
+    scroll-snap-align: start;
+
+    img {
+        width: 8rem;
+        height: 8rem;
+        object-fit: cover;
+        border: $admin-border;
+        opacity: 0.75;
+        transition: opacity 0.15s;
+    }
+
+    &:hover img,
+    &--selected img {
+        opacity: 1;
+    }
+
+    &--selected img {
+        outline: 3px solid $ink;
+        outline-offset: 3px;
+    }
+
+    &:focus-visible {
+        @include admin-focus;
+    }
 }
 
+.coverPickerName,
+.coverPickerArtist {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.coverPickerArtist {
+    font-family: $admin-mono;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.coverPickerBadge {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    min-width: 1.5rem;
+    padding: 0.1rem 0.35rem;
+    background: $ink;
+    color: #FAF5F0;
+    font-family: $admin-mono;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.coverPickerSelected {
+    margin: 0 0 1rem;
+}
+
+.albumListInfo,
 .commentListInfo {
     flex: 1;
     min-width: 0;
 }
 
+.albumListTitle,
 .commentListName {
-    font-weight: 700;
-    margin: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    color: $ink;
+}
+
+.albumListMeta {
+    margin-top: 0.15rem;
+    font-size: 1rem;
+    color: $muted;
 }
 
 .commentListText {
-    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    font-size: 1.05rem;
+    line-height: 1.4;
     color: $ink-soft;
-    margin: 0.25rem 0 0;
     white-space: pre-wrap;
 }
 
-.genreMigration {
-    width: 100%;
-    max-width: 640px;
-    padding: 1.5rem 2rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    box-sizing: border-box;
-
-    h2 {
-        font-size: 1.4rem;
-        margin: 0 0 0.5rem;
-    }
+.hiddenBadge {
+    padding: 0.1rem 0.5rem;
+    font-family: $admin-mono;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $muted;
+    border: 2px solid $muted;
 }
 
-.migrationReport {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: $ink-soft;
-
-    ul {
-        margin: 0.4rem 0 1rem;
-        padding-left: 1.2rem;
-    }
-}
-
-.submissionFilters {
+.albumListActions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    flex-shrink: 0;
+
+    @media (max-width: 768px) {
+        width: 100%;
+    }
 }
+
+// --- Submissions review ---
 
 .submissionMeta {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem 1rem;
-    border: 1.5px solid #D8CFC4;
-    border-radius: 8px;
-    font-size: 0.95rem;
+    gap: 0.4rem;
+    padding: 1rem;
+    border: 3px dashed $ink;
+    font-size: 1.1rem;
+    color: $ink-soft;
+
+    strong {
+        font-weight: normal;
+        color: $ink;
+    }
 
     a { color: inherit; }
 }
@@ -515,10 +580,21 @@
     overflow-wrap: anywhere;
 }
 
-.publishHiddenToggle {
+// --- Login ---
+
+.adminLogin {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 1rem 0;
-    cursor: pointer;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    .adminButton {
+        align-self: flex-start;
+        min-height: 3rem;
+        padding: 0 2rem;
+    }
+}
+
+.adminLoginStatus {
+    font-size: 1.5rem;
+    color: $ink-soft;
 }
