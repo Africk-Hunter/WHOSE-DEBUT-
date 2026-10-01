@@ -10,6 +10,8 @@ const AlbumView = lazy(() => import('./albumView'));
 import { sortAlbumsByReleaseDate, getParsedLocalStorage, setGenresInLocalStorage } from '../utilities/localStorageHandling';
 import { loadAlbumsFromDatabase } from '../utilities/database/firebaseInteractions';
 import { fetchAllGenres } from '../utilities/database/genreInteractions';
+import { fetchPlaceholderSettings } from '../utilities/database/placeholderSettings';
+import { buildPlaceholderAlbums } from '../utilities/placeholders';
 import { logError } from '../utilities/logger';
 import type { Album as AlbumType } from '../utilities/types';
 
@@ -22,6 +24,7 @@ function Main() {
     const homeStickyHeaderRef = useRef<HTMLDivElement>(null);
     const [inArchive, setInArchive] = useState(false);
     const [albums, setAlbums] = useState<AlbumType[]>([]);
+    const [placeholders, setPlaceholders] = useState<AlbumType[]>([]);
     const [loading, setLoading] = useState(true);
     const [scrollCueVisible, setScrollCueVisible] = useState(true);
 
@@ -106,6 +109,12 @@ function Main() {
                 setGenresInLocalStorage(genres);
             } catch (error) {
                 logError('Error loading genres from Firestore:', error);
+            }
+            try {
+                const placeholderSettings = await fetchPlaceholderSettings();
+                setPlaceholders(buildPlaceholderAlbums(placeholderSettings));
+            } catch (error) {
+                logError('Error loading placeholder settings:', error);
             } finally {
                 setLoading(false);
             }
@@ -136,8 +145,12 @@ function Main() {
     }, [location.hash, albums.length]);
 
     const ranked = useMemo(() => albums.map((a, i) => ({ ...a, rank: i + 1 })), [albums]);
-    const heroAlbums = useMemo(() => ranked.slice(0, 3), [ranked]);
-    const stillFreshPool = useMemo(() => ranked.slice(3, 13), [ranked]);
+    // Real albums fill the grid first; placeholders only pad whatever's left
+    // over in the 13 home-page slots (3 hero + 10 Still Fresh) — they never
+    // reach the Archive, which reads `albums` straight from localStorage.
+    const paddedPool = useMemo(() => [...ranked, ...placeholders], [ranked, placeholders]);
+    const heroAlbums = useMemo(() => paddedPool.slice(0, 3), [paddedPool]);
+    const stillFreshPool = useMemo(() => paddedPool.slice(3, 13), [paddedPool]);
 
     if (loading) return <LoadingScreen />;
 
@@ -178,6 +191,7 @@ function Main() {
                                 id={album.id}
                                 rank={album.rank}
                                 genre={album.genres?.[0]}
+                                isPlaceholder={album.isPlaceholder}
                             />
                         ))
                     )}
@@ -219,6 +233,7 @@ function Main() {
                             id={album.id}
                             rank={album.rank}
                             genre={album.genres?.[0]}
+                            isPlaceholder={album.isPlaceholder}
                         />
                     ))}
                 </section>
