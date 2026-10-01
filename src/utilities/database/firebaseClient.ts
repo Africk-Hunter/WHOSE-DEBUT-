@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { type Analytics, isSupported } from 'firebase/analytics';
+import { getFirestore } from 'firebase/firestore/lite';
+import type { Analytics } from 'firebase/analytics';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,9 +17,10 @@ export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
 // Analytics only initializes when a measurement ID is configured and the browser supports it
-// (e.g. not blocked by an ad blocker), so `analytics` may resolve to null.
+// (e.g. not blocked by an ad blocker), so `analytics` may resolve to null. The SDK is
+// dynamically imported so it stays out of the initial bundle and never delays first paint.
 export const analyticsReady: Promise<Analytics | null> = firebaseConfig.measurementId
-    ? isSupported().then((supported) =>
-          supported ? import('firebase/analytics').then(({ getAnalytics }) => getAnalytics(app)) : null,
+    ? import('firebase/analytics').then(({ isSupported, getAnalytics }) =>
+          isSupported().then((supported) => (supported ? getAnalytics(app) : null)),
       )
     : Promise.resolve(null);

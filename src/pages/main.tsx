@@ -100,24 +100,26 @@ function Main() {
     useEffect(() => {
         const init = async () => {
             localStorage.clear();
-            await loadAlbumsFromDatabase();
+            // All three reads are independent — fire them together so the
+            // page waits on the slowest one instead of the sum of all three.
+            const [, genresResult, placeholderResult] = await Promise.allSettled([
+                loadAlbumsFromDatabase(),
+                fetchAllGenres(),
+                fetchPlaceholderSettings(),
+            ]);
             sortAlbumsByReleaseDate();
-            const parsed = getParsedLocalStorage();
-            setAlbums(parsed);
-            try {
-                const genres = await fetchAllGenres();
-                setGenresInLocalStorage(genres);
-            } catch (error) {
-                logError('Error loading genres from Firestore:', error);
+            setAlbums(getParsedLocalStorage());
+            if (genresResult.status === 'fulfilled') {
+                setGenresInLocalStorage(genresResult.value);
+            } else {
+                logError('Error loading genres from Firestore:', genresResult.reason);
             }
-            try {
-                const placeholderSettings = await fetchPlaceholderSettings();
-                setPlaceholders(buildPlaceholderAlbums(placeholderSettings));
-            } catch (error) {
-                logError('Error loading placeholder settings:', error);
-            } finally {
-                setLoading(false);
+            if (placeholderResult.status === 'fulfilled') {
+                setPlaceholders(buildPlaceholderAlbums(placeholderResult.value));
+            } else {
+                logError('Error loading placeholder settings:', placeholderResult.reason);
             }
+            setLoading(false);
         };
         init();
 

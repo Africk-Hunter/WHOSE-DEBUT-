@@ -6,11 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" />
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <!-- Font CSS loads without blocking render; display=swap shows fallback text until it arrives. -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" /></noscript>
     <title>Whose Debut?</title>
+    <meta name="description" content="Fresh releases from Reno-area artists, every week." />
+    <!-- Link previews (iMessage, Discord, Slack, socials). Scrapers need absolute URLs; update these if the domain changes. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Whose Debut?" />
+    <meta property="og:title" content="Whose Debut?" />
+    <meta property="og:description" content="Fresh releases from Reno-area artists, every week." />
+    <meta property="og:url" content="https://whosedebut.com/" />
+    <meta property="og:image" content="https://whosedebut.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Whose Debut? — a vinyl record beside the words Whose Debut?" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://whosedebut.com/og-image.png" />
+    <!-- Critical styles for the pre-JS loading shell below; mirrors loadingScreen.scss. -->
+    <style>
+      body { margin: 0; background: #FAF5F0; }
+      .loadingScreen { width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; background: #FAF5F0; }
+      .loadingSpinner { width: 56px; height: 56px; box-sizing: border-box; border-radius: 50%; border: 5px solid rgba(0, 0, 0, 0.1); border-top-color: #000; animation: loadingSpin 0.8s linear infinite; }
+      .loadingText { margin: 0; font-family: 'Do Hyeon', sans-serif; font-size: 1.25rem; letter-spacing: 0.1em; color: #6c757d; }
+      @keyframes loadingSpin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Painted immediately from HTML; React replaces it on first render. -->
+    <div id="root"><div class="loadingScreen"><div class="loadingSpinner"></div><p class="loadingText">Loading...</p></div></div>
     <script type="module" src="/src/Index.tsx"></script>
   </body>
 </html>

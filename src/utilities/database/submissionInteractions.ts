@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore/lite';
 import { db } from './firebaseClient';
 import { AlbumData, buildNewAlbumDoc } from './firebaseInteractions';
 import { Submission, SubmissionStatus } from '../types';

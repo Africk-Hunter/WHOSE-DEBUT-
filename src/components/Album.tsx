@@ -50,6 +50,7 @@ const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, genre, is
                         alt={title}
                         className="albumImage"
                         loading={type === 'stillFresh' ? 'lazy' : 'eager'}
+                        fetchPriority={type === 'stillFresh' ? 'auto' : 'high'}
                         decoding="async"
                     />
                 )}

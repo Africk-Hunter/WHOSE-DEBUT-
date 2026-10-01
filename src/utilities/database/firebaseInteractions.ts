@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore/lite';
 import { db } from './firebaseClient';
 import { GenreSlug, SEED_GENRES } from '../genres';
 import { getOrCreateGenre } from './genreInteractions';

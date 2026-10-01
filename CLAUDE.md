@@ -123,7 +123,7 @@ All SCSS is imported through a single entry point: [src/styles/index.scss](src/s
 
 ### Key Utility Files
 
-- [src/utilities/database/firebaseClient.ts](src/utilities/database/firebaseClient.ts) — initializes Firebase app, exports `db`, `storage`, `auth`
+- [src/utilities/database/firebaseClient.ts](src/utilities/database/firebaseClient.ts) — initializes Firebase app, exports `db`, `storage`, `auth`. Uses `firebase/firestore/lite` (no realtime listeners/offline cache — import every Firestore function from `firebase/firestore/lite`, never `firebase/firestore`, or the full SDK gets pulled into the bundle and `db` won't match). The Analytics SDK is dynamically imported to keep it out of the initial bundle. `index.html` holds an inline loading shell + critical CSS so something paints before any JS loads.
 - [src/utilities/database/firebaseInteractions.ts](src/utilities/database/firebaseInteractions.ts) — `loadAlbumsFromDatabase`, `uploadCoverToCloudinary`, `uploadPreviewAudioToCloudinary`, `submitAlbumToFirebase`, `updateAlbumInFirebase`, `deleteAlbumFromFirebase`, `updateAlbumComments`, `seedTestAlbums`
 - [src/utilities/database/genreInteractions.ts](src/utilities/database/genreInteractions.ts) — `fetchAllGenres`, `seedGenresIfEmpty`, `getOrCreateGenre` (see Genre System)
 - [src/utilities/genres.ts](src/utilities/genres.ts) — `slugify`, `albumGenres` (tolerates legacy string shape), `computeAvailableGenres` (counts + ordering for filter UI), `SEED_GENRES`

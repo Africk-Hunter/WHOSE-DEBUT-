@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where } from 'firebase/firestore/lite';
 import { db } from './firebaseClient';
 import { GenreEntry, slugify } from '../genres';
 
