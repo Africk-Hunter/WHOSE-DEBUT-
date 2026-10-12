@@ -315,6 +315,19 @@
         }
     }
 
+    .releaseTypeTag {
+        background: $ink;
+
+        span {
+            display: inline-block;
+            font-family: ui-monospace, Menlo, monospace;
+            font-size: .75rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: $background-color;
+        }
+    }
+
     li a {
         display: inline-block;
         font-family: ui-monospace, Menlo, monospace;

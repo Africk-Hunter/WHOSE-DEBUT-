@@ -11,13 +11,64 @@
   background: $background-color;
 }
 
-.loadingSpinner {
-  width: 56px;
-  height: 56px;
+.loadingTurntable {
+  position: relative;
+  width: 112px;
+  height: 92px;
+  border: 3px solid $ink;
+  border-radius: 10px;
+  background: #EDE4DA;
+  box-shadow: 4px 4px 0 $ink;
+}
+
+.loadingRecord {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  border: 5px solid rgba(0, 0, 0, 0.1);
-  border-top-color: #000;
-  animation: loadingSpin 0.8s linear infinite;
+  background:
+    radial-gradient(circle, $background-color 0 2px, #E4572E 2.5px 11px, transparent 11.5px),
+    conic-gradient(transparent 0 30deg, rgba(255, 255, 255, 0.22) 50deg, transparent 70deg 210deg, rgba(255, 255, 255, 0.22) 230deg, transparent 250deg),
+    repeating-radial-gradient(circle, $ink 0 1.5px, #2a2a2a 1.5px 3px);
+  animation: loadingSpin 1.6s linear infinite;
+}
+
+.loadingTonearm {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 4px;
+  height: 52px;
+  border-radius: 2px;
+  background: $ink;
+  transform-origin: 50% 2px;
+  transform: rotate(28deg);
+
+  // pivot
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $ink;
+  }
+
+  // headshell
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: -3px;
+    width: 10px;
+    height: 8px;
+    border-radius: 2px;
+    background: $ink;
+  }
 }
 
 @keyframes loadingSpin {

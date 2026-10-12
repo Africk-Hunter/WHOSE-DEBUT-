@@ -11,6 +11,7 @@ import {
     MAX_SUBMISSION_GENRES,
     PITCH_MAX,
 } from '../utilities/submissions';
+import { RELEASE_TYPES, RELEASE_TYPE_LABELS } from '../utilities/types';
 import { logError } from '../utilities/logger';
 
 const emptyDraft: SubmissionDraft = {
@@ -19,6 +20,7 @@ const emptyDraft: SubmissionDraft = {
     releaseDate: '',
     email: '',
     genres: [],
+    releaseType: 'album',
     suggestedGenres: '',
     pitch: '',
     spotify: '',
@@ -107,6 +109,7 @@ const Submission: React.FC = () => {
                 artist: draft.artist.trim(),
                 year_released: draft.releaseDate,
                 genres: draft.genres,
+                release_type: draft.releaseType,
                 suggested_genres: draft.suggestedGenres.trim(),
                 artist_review: draft.pitch.trim(),
                 spotify: draft.unreleased ? '' : draft.spotify.trim(),
@@ -211,6 +214,23 @@ const Submission: React.FC = () => {
                                     />
                                     {fieldError('email')}
                                 </label>
+                            </div>
+
+                            <div className="submissionField">
+                                <span className="submissionLabel">Release type *</span>
+                                <div className="submissionChips">
+                                    {RELEASE_TYPES.map(type => (
+                                        <button
+                                            type="button"
+                                            key={type}
+                                            className={`submissionChip${draft.releaseType === type ? ' submissionChip--active' : ''}`}
+                                            aria-pressed={draft.releaseType === type}
+                                            onClick={() => setDraft(prev => ({ ...prev, releaseType: type }))}
+                                        >
+                                            {RELEASE_TYPE_LABELS[type]}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="submissionField">

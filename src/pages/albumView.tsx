@@ -7,6 +7,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 import FanNoteForm from '../components/FanNoteForm';
 import PreviewAudioPlayer from '../components/PreviewAudioPlayer';
+import { RELEASE_TYPE_LABELS } from '../utilities/types';
 import type { Album } from '../utilities/types';
 
 function isSafeUrl(url: string): boolean {
@@ -73,6 +74,9 @@ const AlbumView: React.FC<AlbumViewProps> = ({ albumId }) => {
                             <h2 className="albumArtistView">{album.artist}</h2>
                         </div>
                         <ul className="genres">
+                            <li className="releaseTypeTag">
+                                <span>{RELEASE_TYPE_LABELS[album.release_type ?? 'album'] ?? 'Album'}</span>
+                            </li>
                             {albumGenres(album).map(slug => (
                                 <li key={slug}>
                                     <Link to={`/?genre=${slug}#archive`} state={{ fromGenreChip: true }}>{genreLabels[slug] ?? slug}</Link>

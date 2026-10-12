@@ -193,6 +193,7 @@ function Main() {
                                 id={album.id}
                                 rank={album.rank}
                                 genre={album.genres?.[0]}
+                                releaseType={album.release_type}
                                 isPlaceholder={album.isPlaceholder}
                             />
                         ))
@@ -235,6 +236,7 @@ function Main() {
                             id={album.id}
                             rank={album.rank}
                             genre={album.genres?.[0]}
+                            releaseType={album.release_type}
                             isPlaceholder={album.isPlaceholder}
                         />
                     ))}

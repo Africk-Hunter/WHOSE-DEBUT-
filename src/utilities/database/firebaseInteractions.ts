@@ -2,7 +2,7 @@ import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase
 import { db } from './firebaseClient';
 import { GenreSlug, SEED_GENRES } from '../genres';
 import { getOrCreateGenre } from './genreInteractions';
-import { Album, FanComment } from '../types';
+import { Album, FanComment, ReleaseType } from '../types';
 import { logError } from '../logger';
 
 interface AlbumData {
@@ -10,6 +10,7 @@ interface AlbumData {
     artist: string;
     releaseDate: string;
     genres: GenreSlug[];
+    releaseType: ReleaseType;
     description: string;
     fromafan: string;
     spotify: string;
@@ -89,6 +90,7 @@ function buildNewAlbumDoc(albumData: AlbumData, imageUrl: string, previewAudioUr
         artist_review: albumData.description,
         from_a_peer: albumData.fromafan,
         genres: albumData.genres,
+        release_type: albumData.releaseType,
         spotify: albumData.spotify,
         apple: albumData.apple,
         bandcamp: albumData.bandcamp,
@@ -125,6 +127,7 @@ function buildAlbumUpdatePayload(albumData: AlbumData, imageUrl?: string, previe
         artist_review: albumData.description,
         from_a_peer: albumData.fromafan,
         genres: albumData.genres,
+        release_type: albumData.releaseType,
         spotify: albumData.spotify,
         apple: albumData.apple,
         bandcamp: albumData.bandcamp,

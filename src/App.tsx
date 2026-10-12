@@ -34,6 +34,8 @@ function App() {
           }
         />
         <Route path="/album/:albumId" element={<Main />} />
+        {/* TEMP: preview the loading screen */}
+        <Route path="/loading" element={<LoadingScreen />} />
         <Route
           path="/about"
           element={

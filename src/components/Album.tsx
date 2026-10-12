@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
+import { ReleaseType, RELEASE_TYPE_LABELS } from '../utilities/types';
 
 interface AlbumProps {
     type: string | null;
@@ -10,11 +11,12 @@ interface AlbumProps {
     id: string;
     rank?: number;
     genre?: string;
+    releaseType?: ReleaseType;
     isPlaceholder?: boolean;
 }
 
 
-const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, genre, isPlaceholder }) => {
+const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, genre, releaseType, isPlaceholder }) => {
     const navigate = useNavigate();
 
     function viewAlbum() {
@@ -42,7 +44,10 @@ const Album: React.FC<AlbumProps> = ({ type, title, artist, image, id, genre, is
                 {isPlaceholder ? (
                     <span className="placeholderBadge">Coming Soon</span>
                 ) : (
-                    genre && <span className="genreBadge">{genre}</span>
+                    <>
+                        <span className="releaseTypeBadge">{RELEASE_TYPE_LABELS[releaseType ?? 'album'] ?? 'Album'}</span>
+                        {genre && <span className="genreBadge">{genre}</span>}
+                    </>
                 )}
                 {image && (
                     <img

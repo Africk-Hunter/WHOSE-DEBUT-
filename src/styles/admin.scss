@@ -361,6 +361,23 @@ $admin-mono: ui-monospace, Menlo, monospace;
     }
 }
 
+.adminPage .releaseTypeChip {
+    cursor: pointer;
+
+    input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+    }
+
+    &:focus-within {
+        outline: 3px solid $ink;
+        outline-offset: 2px;
+    }
+}
+
 .genreChipWrap {
     display: inline-flex;
     align-items: stretch;

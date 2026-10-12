@@ -25,7 +25,7 @@ import {
     deleteSubmission,
     publishSubmissionAsAlbum,
 } from '../utilities/database/submissionInteractions';
-import { Album, FanComment, Submission, SubmissionStatus } from '../utilities/types';
+import { Album, FanComment, RELEASE_TYPES, RELEASE_TYPE_LABELS, ReleaseType, Submission, SubmissionStatus } from '../utilities/types';
 import { optimizeCloudinaryUrl } from '../utilities/cloudinary';
 import LoadingScreen from '../components/LoadingScreen';
 import AudioClipSelector from '../components/AudioClipSelector';
@@ -36,6 +36,7 @@ interface AlbumFormData {
     artist: string;
     releaseDate: string;
     genres: string[];
+    releaseType: ReleaseType;
     description: string;
     fromafan: string;
     spotify: string;
@@ -50,6 +51,7 @@ const emptyAlbumForm: AlbumFormData = {
     artist: '',
     releaseDate: '',
     genres: [],
+    releaseType: 'album',
     description: '',
     fromafan: '',
     spotify: '',
@@ -122,6 +124,26 @@ const AlbumFormFields: React.FC<AlbumFormFieldsProps> = ({
                 <div className="formGroup">
                     <label htmlFor="releaseDate">Release Date</label>
                     <input type="date" id="releaseDate" name="releaseDate" value={formData.releaseDate} onChange={onInputChange} required />
+                </div>
+                <div className="formGroup">
+                    <label>Release Type</label>
+                    <div className="genreChipGrid">
+                        {RELEASE_TYPES.map(type => (
+                            <label
+                                key={type}
+                                className={`genreChip releaseTypeChip ${formData.releaseType === type ? 'genreChip--active' : ''}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="releaseType"
+                                    value={type}
+                                    checked={formData.releaseType === type}
+                                    onChange={onInputChange}
+                                />
+                                {RELEASE_TYPE_LABELS[type]}
+                            </label>
+                        ))}
+                    </div>
                 </div>
             </div>
             <div className="formGroup genrePicker">
@@ -533,6 +555,7 @@ const AdminDashboard: React.FC = () => {
             artist: album.artist ?? '',
             releaseDate: album.year_released ?? '',
             genres: albumGenres(album),
+            releaseType: album.release_type ?? 'album',
             description: album.artist_review ?? '',
             fromafan: album.from_a_peer ?? '',
             spotify: album.spotify ?? '',
@@ -732,6 +755,7 @@ const AdminDashboard: React.FC = () => {
             artist: submission.artist ?? '',
             releaseDate: submission.year_released ?? '',
             genres: albumGenres(submission),
+            releaseType: submission.release_type ?? 'album',
             description: submission.artist_review ?? '',
             fromafan: '',
             spotify: submission.spotify ?? '',
@@ -782,6 +806,7 @@ const AdminDashboard: React.FC = () => {
             artist: reviewFormData.artist,
             year_released: reviewFormData.releaseDate,
             genres: reviewFormData.genres,
+            release_type: reviewFormData.releaseType,
             artist_review: reviewFormData.description,
             spotify: reviewFormData.spotify,
             apple: reviewFormData.apple,

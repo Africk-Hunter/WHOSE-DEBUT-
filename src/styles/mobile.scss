@@ -356,6 +356,18 @@ $mb-gutter: 20px;
     font-family: ui-monospace, Menlo, monospace;
     font-size: .6875rem;
   }
+  .releaseTypeBadge {
+    position: absolute;
+    top: -$mb-frame;
+    left: -$mb-frame;
+    padding: 3px 7px;
+    background: $mb-ink;
+    color: $mb-bg;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: .6875rem;
+    text-transform: uppercase;
+    z-index: 1;
+  }
   .genreBadge {
     position: absolute;
     bottom: -$mb-frame;

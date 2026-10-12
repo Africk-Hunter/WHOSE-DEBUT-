@@ -4,6 +4,16 @@ export interface FanComment {
     text: string;
 }
 
+export type ReleaseType = 'single' | 'ep' | 'album';
+
+export const RELEASE_TYPES: ReleaseType[] = ['album', 'ep', 'single'];
+
+export const RELEASE_TYPE_LABELS: Record<ReleaseType, string> = {
+    album: 'Album',
+    ep: 'EP',
+    single: 'Single',
+};
+
 export interface Album {
     id: string;
     name: string;
@@ -13,6 +23,7 @@ export interface Album {
     artist_review: string;
     from_a_peer: string;
     genres: string[];
+    release_type?: ReleaseType;
     spotify: string;
     apple: string;
     bandcamp: string;
@@ -37,6 +48,7 @@ export interface Submission {
     year_released: string;
     genres: string[];
     suggested_genres: string;
+    release_type?: ReleaseType;
     artist_review: string;
     spotify: string;
     apple: string;

@@ -1,4 +1,5 @@
 import { EMAIL_RE } from './fanNotes';
+import { ReleaseType } from './types';
 
 export interface SubmissionDraft {
     title: string;
@@ -6,6 +7,7 @@ export interface SubmissionDraft {
     releaseDate: string;
     email: string;
     genres: string[];
+    releaseType: ReleaseType;
     suggestedGenres: string;
     pitch: string;
     spotify: string;
