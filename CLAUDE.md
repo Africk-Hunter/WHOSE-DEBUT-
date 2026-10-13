@@ -15,9 +15,10 @@ npm run dev       # Start Vite dev server
 npm run build     # TypeScript check + Vite production build
 npm run lint      # ESLint (0 warnings allowed, exits non-zero on any warning)
 npm run preview   # Preview the production build locally
+npm test          # Vitest unit tests (pure utilities in src/utilities/__tests__)
 ```
 
-There are no tests in this project.
+Tests cover the pure utilities only (genres, fan-note validation, text formatting, album form helpers, WAV encoding, localStorage helpers); there are no component or Firebase tests.
 
 ## Environment Variables
 
